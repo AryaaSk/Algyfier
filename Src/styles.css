@@ -1,0 +1,28 @@
+body {
+    margin: 0;
+}
+div {
+    padding: 0;
+    margin: 0;
+}
+
+#main {
+    height: 100%;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 100%;
+}
+
+#constraintsWrapper {
+    height: 100%;
+    width: 100%;
+}
+
+#calculatorWrapper {
+    height: 100%;
+    width: calc(100% - 2px); /* To account for the border */
+
+    border-left: 2px solid black;
+}
