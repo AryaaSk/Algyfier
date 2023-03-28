@@ -1,21 +1,21 @@
 let POINTS: { [id: string] : Point } = {};
+let LINES: { [id: string] : Line } = {};
+let SHAPES: { [id: string] : Shape } = {};
+
 let POINT_CONTRAINTS: PointConstraint[] = [];
-let LINES: Line[] = [];
 let LINE_CONSTRAINTS: LineConstraint[] = [];
-let SHAPES: Shape[] = [];
-//Change all of these to dictionaries
 
 const DEPENDANCY_GRAPH: { [id: string] : string[] } = {}; //DEPENDANCY_GRAPH[id] returns a list of all objects id is dependent on
 
 interface Point {
     ID: string;
-    x?: number;
-    y?: number;
+    x: number | string;
+    y: number | string;
 }
 interface PointConstraint {
-    point1ID: string;
-    point2ID: string;
-    relationship: "vertical" | "horizontal"; //e.g. if relationship was vertical, point 2 must be vertical to point 1
+    point1ID: string; //dependent
+    point2ID: string; //independent
+    relationship: "v" | "h"; //e.g. if relationship was vertical, point 2 must be vertical to point 1
 }
 interface Line {
     ID: string;
@@ -29,8 +29,9 @@ interface Line {
     equation: string;
 }
 interface LineConstraint {
-    pointID: string;
     lineID: string; //point must lie on line, will use x or y constraining depending on the situation
+    pointID: string;
+    constraintType: "x" | "y";
 }
 interface Shape {
     ID: string;
@@ -41,23 +42,36 @@ interface Shape {
     data: number[]; //differet data assosiated with different shapes, e.g. for circle: [Cx, Cy, r]
 }
 
-const Point = (ID: string, x?: number, y?: number): Point => {
+const Point = (ID: string, x: number | string, y: number | string): Point => {
     return { ID: ID, x: x, y: y  };
 }
-const PointConstraint = (point1ID: string, point2ID: string, relationship: "vertical" | "horizontal"): PointConstraint => {
+const PointConstraint = (point1ID: string, point2ID: string, relationship: "v" | "h"): PointConstraint => {
     return { point1ID: point1ID, point2ID: point2ID, relationship: relationship };
 }
 const Line = (ID: string, point1ID: string, point2ID: string): Line => {
-    const [x1, y1] = [`${point1ID}_{x}`, `${point1ID}_{y}`];
-    const [x2, y2] = [`${point2ID}_{x}`, `${point2ID}_{y}`];
+    const line = { ID: ID, point1ID: point1ID, point2ID: point2ID,  a: "", b: "", c: "", equation: "" };
+    RecomputeLine(line);
+    return line;
+}
+const LineConstraint = (lineID: string, pointID: string, constraintType: "x" | "y" ): LineConstraint => {
+    return { lineID: lineID, pointID: pointID, constraintType: constraintType };
+}
+const Shape = (ID: string, type: "circle" | "square", pointIDs: string[], lineIDs: string[], data: number[]): Shape => {
+    return { ID: ID, type: type, pointIDs: pointIDs, lineIDs: lineIDs, data: data };
+}
+
+
+const RecomputeLine = (line: Line) => {
+    const [x1, y1] = [`${line.point1ID}_{x}`, `${line.point1ID}_{y}`];
+    const [x2, y2] = [`${line.point2ID}_{x}`, `${line.point2ID}_{y}`];
 
     const a = `(${y1} - ${y2})`;
     const b = `(${x2} - ${x1})`;
     const c = `(${x1}${y2} - ${x2}${y1})`;
     const equation = `${a}x + ${b}y + ${c} = 0`;
-    return { ID: ID, point1ID: point1ID, point2ID: point2ID, a: a, b: b, c: c, equation: equation };
+    [line.a, line.b, line.c] = [a, b, c];
+    line.equation = equation;
 }
-//Continue to add the rest of constraints
 
 
 
@@ -71,13 +85,19 @@ const UpdatePoints = () => {
         const point = POINTS[id];
         if (point != undefined) {
             //we know the id from desmos is definetly a point, get x and y value of point from desmos
-            const desmosX = 0; //retreive slider information from desmos
-            const desmosY = 0;
-
-            //however we only want to alter points' x/y value if it is independent, which will be clear by checking whether the x or y value of the point is undefined
-            //alter point.x or point.y
+            //however we only want to alter points' x/y value if it is independent, which will be clear by checking whether the x or y value of the point is a number or string
+            if (isNaN(<any>(point.x))) {
+                const desmosX = Number((<any>CALCULATOR.expressionAnalysis[id + "_{x}"]).evaluation.value);
+                point.x = desmosX;
+            }
+            if ((isNaN(<any>(point.y)))) {
+                const desmosY = Number((<any>CALCULATOR.expressionAnalysis[id + "_{y}"]).evaluation.value);
+                point.y = desmosY
+            }
         }
     }
+
+    console.log(POINTS);
 }
 
 
@@ -101,37 +121,81 @@ const UpdateCalculator = (expressions: Desmos.ExpressionState[]) => {
 }
 
 //NEED TO IMPLEMENT DEPENDENCY MAP
-const RenderScene = (points: { [id: string] : Point }, pointConstraints: PointConstraint[], lines: Line[], LineConstraints: LineConstraint[], shapes: Shape[]) => {
+const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : Line }, shapes: { [id: string] : Shape }, pointConstraints: PointConstraint[], lineConstraints: LineConstraint[]) => {
     //need to add expressions in a specific order to avoid 'in terms of' error
     //points -> point constraints -> lines -> line constraints -> shapes
 
-    //before rendering scene, we need to make sure all constraints are in place
-
-
-
     EXPRESSIONS = [];
+    //before rendering scene, we need to make sure all constraints are in place
+    //Since I am directly modifying the points dictionary, this may cause some reference value issues, however as long as the constraints are correct, then it is 'controlled-overwriting'
+
+    //point constraints: use an external variable and write the dependant point in terms of the independant and the external variable
+    for (const constraint of pointConstraints) {
+        //e.g. p1 is horizontal to p2 -> p2 is independent, p1 is dependent
+        const dependentID = constraint.point1ID;
+        const independantID = constraint.point2ID;
+        //const id = constraint.relationship + `_{${dependentID}${independantID}}`;
+
+        const dependentPoint = points[dependentID];
+        if (constraint.relationship == "v") {
+            dependentPoint.x = `${independantID}_{x}`;
+        }
+        else if (constraint.relationship == "h") {
+            dependentPoint.y = `${independantID}_{y}`;
+        }
+
+        //const baseValue = 5;
+        //const externalVariable: Desmos.ExpressionState = { id: id, latex: `${id} = ${baseValue}` };
+        //EXPRESSIONS.push(externalVariable);
+    }
+    //then squares/rectangles are just special cases of point constraints, where you just 'lock' all constraints in terms of 1 or 2 variables
+
+    //JUST REALISED THAT I DON'T NEED TO HAVE AN EXTERNAL VARIABLE FOR REGULAR POINT CONSTRAINTS    
+
+    //line constraint: either lock points with y-coordiante or x-coorindate, will need to make a judgment later, then just replace the points_x/y with the line equation with their x/y counterpart substituted in
+    for (const constraint of lineConstraints) {
+        const dependent = constraint.constraintType;
+        const point = points[constraint.pointID];
+        const line = lines[constraint.lineID];
+        const [px, py] = [point.ID + "_{x}", point.ID + "_{y}"];
+
+        //need to rearrange equation for x or y
+        const [a, b, c] = [line.a, line.b, line.c];
+        if (dependent == "x") {
+            const newEquation = `(-${c} - ${b}${py})/${a}`
+            point.x = newEquation;
+        }
+        if (dependent == "y") {
+            const newEquation = `(-${c} - ${a}${px})/${b}`
+            point.y = newEquation;
+        }
+    }
+
+
     //points: generate 2 variables for each point, point_x and point_y
     for (const id in points) {
         const point = points[id];
         const x = point.x ? point.x : 0;
         const y = point.y ? point.y : 0
 
-        const pX: Desmos.ExpressionState = { id: `${id}_x`, latex: `${id}_{x} = ${x}` };
-        const pY: Desmos.ExpressionState = { id: `${id}_y`, latex: `${id}_{y} = ${y}` };
-        const p: Desmos.ExpressionState = { id: id, latex: `${id} = (${id}_{x}, ${id}_{y})`, label: id };
+        const pX: Desmos.ExpressionState = { id: `${id}_{x}`, latex: `${id}_{x} = ${x}` };
+        const pY: Desmos.ExpressionState = { id: `${id}_{y}`, latex: `${id}_{y} = ${y}` };
+        const p: Desmos.ExpressionState = { id: id, latex: `${id} = (${id}_{x}, ${id}_{y})`, label: id, showLabel: true };
         EXPRESSIONS.push(p, pX, pY);
     }
-    console.log(EXPRESSIONS);
-
-    //BELOW IS WHERE WE NEED THE DEPENDENCY GRAPH
-    //point constraints: use an external variable and write the dependant point in terms of the independant and the external variable
 
     //lines: already have equation, just plot line
-
-    //line constraint: either lock points with y-coordiante or x-coorindate, will need to make a judgment later, then just replace the points_x/y with the line equation with their x/y counterpart substituted in
+    for (const id in lines) {
+        const line = lines[id];
+        const equation = line.equation;
+        const l: Desmos.ExpressionState = { id: id, latex: equation };
+        EXPRESSIONS.push(l);
+    }
 
     //shape: for square, will need to consider this as a point constraint
     //       for circle, simply use information given an construct using points and/or line equations already calculated
+
+    console.log(EXPRESSIONS);
 }
 
 
@@ -149,7 +213,21 @@ const Main = () => {
     const calculatorElement = document.getElementById("calculator")!;
     CALCULATOR = InitCalculator(calculatorElement, options);
 
+    document.onkeydown = ($e) => {
+        const key = $e.key.toLowerCase();
+        if (key == " ") {
+            UpdatePoints();
+        }
+    }
+
     //EXPRESSIONS.push({ latex: 'y=x^2' }, { latex: "m = 0", sliderBounds: {min: 0, max: 10, step: 1} }, { latex: "x = m" });
+
+    //Formats:
+    //Point: a
+    //Point constraint: abV or abH
+    //Line: AB
+    //Line Constraint: ABa
+    //Shape: A
 
     POINTS["a"] = Point("a", 0, 10);
     DEPENDANCY_GRAPH["a"] = []; //always add to dependency graph when adding to an array
@@ -157,12 +235,22 @@ const Main = () => {
     POINTS["b"] = Point("b", 10, 0);
     DEPENDANCY_GRAPH["b"] = []
 
-    LINES = [
-        Line("AB", "a", "b")
-    ];
+    LINES["AB"] = Line("AB", "a", "b");
     DEPENDANCY_GRAPH["AB"] = ["a", "b"];
 
-    RenderScene(POINTS, POINT_CONTRAINTS, LINES, LINE_CONSTRAINTS, SHAPES);
+    POINTS["c"] = Point("c", 5, "");
+    DEPENDANCY_GRAPH["c"] = [];
+    LINE_CONSTRAINTS.push(LineConstraint("AB", "c", "y"));
+    DEPENDANCY_GRAPH["c"].push("AB");
+
+    POINTS["d"] = Point("d", "", "");
+    DEPENDANCY_GRAPH["d"] = [];
+    POINT_CONTRAINTS.push(PointConstraint("d", "a", "h"));
+    DEPENDANCY_GRAPH["d"].push("a")
+    POINT_CONTRAINTS.push(PointConstraint("d", "b", "v"));
+    DEPENDANCY_GRAPH["d"].push("b")
+
+    RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
 
     UpdateCalculator(EXPRESSIONS);
 }
