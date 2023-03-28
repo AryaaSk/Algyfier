@@ -86,6 +86,7 @@ const RecomputeLine = (line: Line) => {
 
 //NEED TO IMPLEMENT A SYSTEM WHERE USER CAN DRAG POINTS ON DESMOS, WHICH WILL UPDATE THEIR X AND Y VALUES ACCORDINGLY
 //However should only update points which have independent x/y values, e.g. not points' x/y value which is controlled by a line
+//This should be called everytime the user is about to make 'overriding changes', e.g. clicking 'update model' from UI
 const UpdatePoints = () => {
     //reads data from calculator, and updates x and y values of points
     const data = CALCULATOR.getExpressions();
@@ -317,9 +318,9 @@ const Main = () => {
 
     //Formats:
     //Point: a
-    //Point constraint: abV or abH
-    //Line: AB
-    //Line Constraint: ABa
+    //Point constraint: - (when no distance) or S_{independent}{dependent}, e.g. S_{ab}
+    //Line: AB (alphabetical order)
+    //Line Constraint: - (array not dictionary)
     //Shape: A
 
     POINTS["a"] = Point("a", 0, 10);
