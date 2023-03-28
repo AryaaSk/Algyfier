@@ -8,8 +8,8 @@ const DEPENDANCY_GRAPH = {}; //DEPENDANCY_GRAPH[id] returns a list of all object
 const Point = (ID, x, y) => {
     return { ID: ID, x: x, y: y };
 };
-const PointConstraint = (point1ID, point2ID, relationship) => {
-    return { point1ID: point1ID, point2ID: point2ID, relationship: relationship };
+const PointConstraint = (point1ID, point2ID, relationship, distance) => {
+    return { point1ID: point1ID, point2ID: point2ID, relationship: relationship, distance: distance };
 };
 const Line = (ID, point1ID, point2ID) => {
     const line = { ID: ID, point1ID: point1ID, point2ID: point2ID, a: "", b: "", c: "", equation: "" };
@@ -75,25 +75,33 @@ const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) =
     EXPRESSIONS = [];
     //before rendering scene, we need to make sure all constraints are in place
     //Since I am directly modifying the points dictionary, this may cause some reference value issues, however as long as the constraints are correct, then it is 'controlled-overwriting'
-    //point constraints: use an external variable and write the dependant point in terms of the independant and the external variable
+    //CONSTRAINTS OVERWRITE DIRECT VALUES/EQUATIONS
+    //point constraints: write the dependant point in terms of the independant point
     for (const constraint of pointConstraints) {
-        //e.g. p1 is horizontal to p2 -> p2 is independent, p1 is dependent
         const dependentID = constraint.point1ID;
         const independantID = constraint.point2ID;
-        //const id = constraint.relationship + `_{${dependentID}${independantID}}`;
+        //if there is also an assosiated distance then the dependent point has no freedom - use external variable to dictate the position of dependent point
+        const distance = constraint.distance;
+        const id = constraint.relationship + `_{${dependentID}${independantID}}`;
         const dependentPoint = points[dependentID];
         if (constraint.relationship == "v") {
             dependentPoint.x = `${independantID}_{x}`;
+            if (distance != undefined) {
+                dependentPoint.y = `${independantID}_{y} + ${id}`;
+            }
         }
         else if (constraint.relationship == "h") {
             dependentPoint.y = `${independantID}_{y}`;
+            if (distance != undefined) {
+                dependentPoint.x = `${independantID}_{x} + ${id}`;
+            }
         }
-        //const baseValue = 5;
-        //const externalVariable: Desmos.ExpressionState = { id: id, latex: `${id} = ${baseValue}` };
-        //EXPRESSIONS.push(externalVariable);
+        if (distance != undefined) {
+            const externalVariable = { id: id, latex: `${id} = ${distance}` };
+            EXPRESSIONS.push(externalVariable);
+        }
     }
     //then squares/rectangles are just special cases of point constraints, where you just 'lock' all constraints in terms of 1 or 2 variables
-    //JUST REALISED THAT I DON'T NEED TO HAVE AN EXTERNAL VARIABLE FOR REGULAR POINT CONSTRAINTS    
     //line constraint: either lock points with y-coordiante or x-coorindate, will need to make a judgment later, then just replace the points_x/y with the line equation with their x/y counterpart substituted in
     for (const constraint of lineConstraints) {
         const dependent = constraint.constraintType;
@@ -166,7 +174,7 @@ const Main = () => {
     DEPENDANCY_GRAPH["c"].push("AB");
     POINTS["d"] = Point("d", "", "");
     DEPENDANCY_GRAPH["d"] = [];
-    POINT_CONTRAINTS.push(PointConstraint("d", "a", "h"));
+    POINT_CONTRAINTS.push(PointConstraint("d", "a", "h")); //inconsistencies arise when you try and supply too many constraints, e.g. a H and V to 2 points, but then also a distance from one point
     DEPENDANCY_GRAPH["d"].push("a");
     POINT_CONTRAINTS.push(PointConstraint("d", "b", "v"));
     DEPENDANCY_GRAPH["d"].push("b");
