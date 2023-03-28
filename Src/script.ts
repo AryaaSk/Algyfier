@@ -5,8 +5,6 @@ let SHAPES: { [id: string] : Shape } = {};
 let POINT_CONTRAINTS: PointConstraint[] = [];
 let LINE_CONSTRAINTS: LineConstraint[] = [];
 
-const DEPENDANCY_GRAPH: { [id: string] : string[] } = {}; //DEPENDANCY_GRAPH[id] returns a list of all objects id is dependent on
-
 interface Point {
     ID: string;
     x: number | string;
@@ -20,7 +18,7 @@ interface PointConstraint {
     distance?: number;
 }
 interface Line {
-    ID: string;
+    ID: string; //always have capital p1 -> p2, (alphabetical order)
     point1ID: string;
     point2ID: string;
 
@@ -37,11 +35,20 @@ interface LineConstraint {
 }
 interface Shape {
     ID: string;
-    type: "circle" | "square"; //square may be handled differently as it must control points rather than being defined implicitally
+    type: "circle" | "rectangle"; //rectangle may be handled differently as it must control points rather than being defined implicitally
     pointIDs: string[];
     lineIDs: string[];
 
     data: number[]; //differet data assosiated with different shapes, e.g. for circle: [Cx, Cy, r]
+
+    //Conventions:
+    //Square/Rectangle: pointIDs: [independent (bottom left), bottom right, top right, top left], data: [height, width]
+    //Circle [3 points]: pointIDs: [p1, p2, p3]
+    //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
+    //Circle [2 points which are diameter]: pointIDs: [p1, p2]
+    //Circle [center and radius]: pointIDs: [C], data: [r]
+    //Circle [center and point]: pointIDs: [C, p1]
+    //Circle [center and tangent] (having got formula yet)
 }
 
 const Point = (ID: string, x: number | string, y: number | string): Point => {
@@ -58,7 +65,7 @@ const Line = (ID: string, point1ID: string, point2ID: string): Line => {
 const LineConstraint = (lineID: string, pointID: string, constraintType: "x" | "y" ): LineConstraint => {
     return { lineID: lineID, pointID: pointID, constraintType: constraintType };
 }
-const Shape = (ID: string, type: "circle" | "square", pointIDs: string[], lineIDs: string[], data: number[]): Shape => {
+const Shape = (ID: string, type: "circle" | "rectangle", pointIDs: string[], lineIDs: string[], data: number[]): Shape => {
     return { ID: ID, type: type, pointIDs: pointIDs, lineIDs: lineIDs, data: data };
 }
 
@@ -107,7 +114,6 @@ const UpdatePoints = () => {
 
 
 let CALCULATOR: Desmos.Calculator;
-let EXPRESSIONS: Desmos.ExpressionState[] = [];
 
 const InitCalculator = (element: HTMLElement, options: { [k : string] : boolean }) => {
     const calculator = Desmos.GraphingCalculator(element, options);
@@ -122,15 +128,81 @@ const UpdateCalculator = (expressions: Desmos.ExpressionState[]) => {
     CALCULATOR.setExpressions(expressions); //add new ones
 }
 
-//NEED TO IMPLEMENT DEPENDENCY MAP
+const UpdateDependencyGraph = (dependencyGraph: { [id: string] : string[] }, points: { [id: string] : Point }, lines: { [id: string] : Line }, shapes: { [id: string] : Shape }, pointConstraints: PointConstraint[], lineConstraints: LineConstraint[]) => {
+    dependencyGraph = {}; //depGraph[id] returns list of ids which it is dependent on
+
+    /*
+    //point
+    DEPENDANCY_GRAPH["a"] = [];
+
+    //point constraint
+    DEPENDANCY_GRAPH["d"].push("a") //d is dependent on a, don't know if it is vertical or horizontal
+    //also need a way to conventionalise if d had a distance assosiated with a, could use the id given to the external variables
+
+    //line
+    DEPENDANCY_GRAPH["AB"] = ["a", "b"];
+
+    //line constraint
+    DEPENDANCY_GRAPH["c"].push("AB"); //c must be on AB
+
+    //for square, apply point constraints and line constraints, these will have already been done from above
+    //for circle will need to add dependencies depending on the circle's construction
+    */
+}
+
 const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : Line }, shapes: { [id: string] : Shape }, pointConstraints: PointConstraint[], lineConstraints: LineConstraint[]) => {
     //need to add expressions in a specific order to avoid 'in terms of' error
-    //points -> point constraints -> lines -> line constraints -> shapes
 
-    EXPRESSIONS = [];
+    const pointExpressions: Desmos.ExpressionState[] = [];
+    const lineExpressions: Desmos.ExpressionState[] = [];
+    const externalVariables: Desmos.ExpressionState[] = [];
+    const shapeExpressions: Desmos.ExpressionState[] = [];
     //before rendering scene, we need to make sure all constraints are in place
     //Since I am directly modifying the points dictionary, this may cause some reference value issues, however as long as the constraints are correct, then it is 'controlled-overwriting'
     //CONSTRAINTS OVERWRITE DIRECT VALUES/EQUATIONS
+
+    //shape: for rectangle, will need to consider this as a point constraint
+    //       for circle, simply use information given an construct using points and/or line equations already calculated
+    for (const id in shapes) {
+        const shape = shapes[id];
+        
+        if (shape.type == "rectangle") {
+            //Treat like point constraints: external variable for sideLength, then make all points dependent on independent point (bottom-left)
+            //Just add some point constraints
+            const [height, width] = shape.data;
+            const [bl, br, tr, tl] = shape.pointIDs;
+            pointConstraints.push(PointConstraint(br, bl, "h", width));
+            pointConstraints.push(PointConstraint(tl, bl, "v", height));
+            pointConstraints.push(PointConstraint(tr, br, "v"));
+            pointConstraints.push(PointConstraint(tr, tl, "h"));
+
+            //Also add lines between the points
+            const newLineIDs = [
+                [bl, br].sort().join("").toUpperCase(),
+                [br, tr].sort().join("").toUpperCase(),
+                [tr, tl].sort().join("").toUpperCase(),
+                [tl, bl].sort().join("").toUpperCase()
+            ]
+            for (const lineID of newLineIDs) {
+                const p1 = lineID[0].toLowerCase();
+                const p2 = lineID[1].toLowerCase();
+                lines[lineID] = Line(lineID, p1, p2);
+            }
+        }
+
+        else if (shape.type == "circle") {
+            //Need to identify which type it is:
+            //Circle [3 points]: pointIDs: [p1, p2, p3]
+            //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
+            //Circle [2 points which are diameter]: pointIDs: [p1, p2]
+            //Circle [center and radius]: pointIDs: [C], data: [r]
+            //Circle [center and point]: pointIDs: [C, p1]
+            //Circle [center and tangent] (having got formula yet)
+
+            //Then handle separately by generating C_{id}x, C_{id}y and C_{id}r
+            //Release 4 expressions: 3 above and circle equation (x - a)^2 + (y - b)^2 = r^2
+        }
+    }
 
     //point constraints: write the dependant point in terms of the independant point
     for (const constraint of pointConstraints) {
@@ -139,7 +211,7 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
 
         //if there is also an assosiated distance then the dependent point has no freedom - use external variable to dictate the position of dependent point
         const distance = constraint.distance;
-        const id = constraint.relationship + `_{${dependentID}${independantID}}`;
+        const id = "S" + `_{${independantID}${dependentID}}`; //S stands for displacement/distance
 
         const dependentPoint = points[dependentID];
         if (constraint.relationship == "v") {
@@ -156,11 +228,10 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
         }
 
         if (distance != undefined) {
-            const externalVariable: Desmos.ExpressionState = { id: id, latex: `${id} = ${distance!}` };
-            EXPRESSIONS.push(externalVariable);
+            const externalVariable: Desmos.ExpressionState = { id: id, latex: `${id} = ${distance!}`, sliderBounds: { min: 0, max: 10, step: "" } };
+            externalVariables.push(externalVariable);
         }
     }
-    //then squares/rectangles are just special cases of point constraints, where you just 'lock' all constraints in terms of 1 or 2 variables
 
     //line constraint: either lock points with y-coordiante or x-coorindate, will need to make a judgment later, then just replace the points_x/y with the line equation with their x/y counterpart substituted in
     for (const constraint of lineConstraints) {
@@ -191,7 +262,7 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
         const pX: Desmos.ExpressionState = { id: `${id}_{x}`, latex: `${id}_{x} = ${x}` };
         const pY: Desmos.ExpressionState = { id: `${id}_{y}`, latex: `${id}_{y} = ${y}` };
         const p: Desmos.ExpressionState = { id: id, latex: `${id} = (${id}_{x}, ${id}_{y})`, label: id, showLabel: true };
-        EXPRESSIONS.push(p, pX, pY);
+        pointExpressions.push(p, pX, pY);
     }
 
     //lines: already have equation, just plot line
@@ -199,13 +270,27 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
         const line = lines[id];
         const equation = line.equation;
         const l: Desmos.ExpressionState = { id: id, latex: equation };
-        EXPRESSIONS.push(l);
+        lineExpressions.push(l);
     }
 
-    //shape: for square, will need to consider this as a point constraint
-    //       for circle, simply use information given an construct using points and/or line equations already calculated
+    //also need to check if some points are 'over-constrained'
+    //e.g. a point has 2 variables of freedom (x and y), so if there are more than 2 constraints acting on it then it is 'over-constrained'
+    //constraints on points include: point constraints (constrain v or h to a point), point constraints (distance), line constraints, 
+    //a shape formation may also be 'over-constrained', e.g. a circle trying to be defined with 3 points and a tangent
 
-    console.log(EXPRESSIONS);
+    //This can be checked using the dependency graph
+    const dependencyGraph: { [id: string] : string[] } = {}; //DEPENDANCY_GRAPH[id] returns a list of all objects id is dependent on
+    UpdateDependencyGraph(dependencyGraph, points, lines, shapes, pointConstraints, lineConstraints);
+    //Check if a point has more than 2 dependencies and if a circle has more than 3 constraints (may be some edge cases)
+
+    let expressions: Desmos.ExpressionState[] = [];
+    expressions = expressions.concat(externalVariables);
+    expressions = expressions.concat(pointExpressions);
+    expressions = expressions.concat(lineExpressions);
+    expressions = expressions.concat(shapeExpressions);
+    
+    console.log(expressions);
+    return expressions;
 }
 
 
@@ -230,8 +315,6 @@ const Main = () => {
         }
     }
 
-    //EXPRESSIONS.push({ latex: 'y=x^2' }, { latex: "m = 0", sliderBounds: {min: 0, max: 10, step: 1} }, { latex: "x = m" });
-
     //Formats:
     //Point: a
     //Point constraint: abV or abH
@@ -240,28 +323,32 @@ const Main = () => {
     //Shape: A
 
     POINTS["a"] = Point("a", 0, 10);
-    DEPENDANCY_GRAPH["a"] = []; //always add to dependency graph when adding to an array
-
     POINTS["b"] = Point("b", 10, 0);
-    DEPENDANCY_GRAPH["b"] = []
 
     LINES["AB"] = Line("AB", "a", "b");
-    DEPENDANCY_GRAPH["AB"] = ["a", "b"];
 
     POINTS["c"] = Point("c", 5, "");
-    DEPENDANCY_GRAPH["c"] = [];
     LINE_CONSTRAINTS.push(LineConstraint("AB", "c", "y"));
-    DEPENDANCY_GRAPH["c"].push("AB");
 
     POINTS["d"] = Point("d", "", "");
-    DEPENDANCY_GRAPH["d"] = [];
     POINT_CONTRAINTS.push(PointConstraint("d", "a", "h")); //inconsistencies arise when you try and supply too many constraints, e.g. a H and V to 2 points, but then also a distance from one point
-    DEPENDANCY_GRAPH["d"].push("a")
     POINT_CONTRAINTS.push(PointConstraint("d", "b", "v"));
-    DEPENDANCY_GRAPH["d"].push("b")
 
-    RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
+    //Square
+    //Values given in Point() construction will be overwritten by constraints anyway
+    POINTS["h"] = Point("h", 0, 0);
+    POINTS["j"] = Point("j", 0, 0);
+    POINTS["k"] = Point("k", 0, 0);
+    POINTS["l"] = Point("l", 0, 0);
+    SHAPES["A"] = Shape("A", "rectangle", ["h", "j", "k", "l"], [], [5, 5]);
 
-    UpdateCalculator(EXPRESSIONS);
+    //In future may also want to switch RenderScene() function from using reference values to deep copied values
+    const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
+    UpdateCalculator(expressions);
 }
 Main();
+
+//TODO
+//IMPLEMENT ALL CIRCLE CONSTRUCTIONS
+//IMPLEMENT DEPENDENCY GRAPH FUNCTION
+//USE DEPENDENCY GRAPH TO CHECK FOR 'OVER-CONSTRAINING'
