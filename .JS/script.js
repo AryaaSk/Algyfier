@@ -33,6 +33,7 @@ const RecomputeLine = (line) => {
 };
 //NEED TO IMPLEMENT A SYSTEM WHERE USER CAN DRAG POINTS ON DESMOS, WHICH WILL UPDATE THEIR X AND Y VALUES ACCORDINGLY
 //However should only update points which have independent x/y values, e.g. not points' x/y value which is controlled by a line
+//This should be called everytime the user is about to make 'overriding changes', e.g. clicking 'update model' from UI
 const UpdatePoints = () => {
     //reads data from calculator, and updates x and y values of points
     const data = CALCULATOR.getExpressions();
@@ -122,15 +123,43 @@ const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) =
             }
         }
         else if (shape.type == "circle") {
+            let [Cx, Cy, Cr] = ["", "", ""];
+            //IDs: Cx -> id_{x}, etc...
             //Need to identify which type it is:
             //Circle [3 points]: pointIDs: [p1, p2, p3]
+            if (shape.pointIDs.length == 3) {
+                const [p1, p2, p3] = shape.pointIDs;
+                Cx = `\\frac{\\left(${p1}_{x}^{2}-${p2}_{x}^{2}+${p1}_{y}^{2}-${p2}_{y}^{2}\\right)\\left(${p1}_{y}-${p3}_{y}\\right)-\\left(${p1}_{x}^{2}-${p3}_{x}^{2}+${p1}_{y}^{2}-${p3}_{y}^{2}\\right)\\left(${p1}_{y}-${p2}_{y}\\right)}{2\\left(\\left(${p3}_{x}-${p1}_{x}\\right)\\left(${p1}_{y}-${p2}_{y}\\right)-\\left(${p2}_{x}-${p1}_{x}\\right)\\left(${p1}_{y}-${p3}_{y}\\right)\\right)}`;
+                Cy = `\\frac{${p1}_{x}^{2}\\left(${p2}_{x}-${p3}_{x}\\right)+${p1}_{x}\\left(-${p2}_{x}^{2}-${p2}_{y}^{2}+${p3}_{x}^{2}+${p3}_{y}^{2}\\right)+${p1}_{y}^{2}\\left(${p2}_{x}-${p3}_{x}\\right)+${p3}_{x}\\left(${p2}_{x}^{2}-${p2}_{x}${p3}_{x}+${p2}_{y}^{2}\\right)-${p2}_{x}${p3}_{y}^{2}}{2\\left(${p1}_{x}\\left(${p3}_{y}-${p2}_{y}\\right)+${p1}_{y}\\left(${p2}_{x}-${p3}_{x}\\right)-${p2}_{x}${p3}_{y}+${p2}_{y}${p3}_{x}\\right)}`;
+                Cr = `\\sqrt{\\left(${p1}_{x}-${id}_{x}\\right)^{2}+\\left(${p1}_{y}-${id}_{y}\\right)^{2}}`;
+            }
             //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
+            if (shape.pointIDs.length == 2 && shape.lineIDs.length == 1) {
+                const [p1, p2] = shape.pointIDs;
+                const line = lines[shape.lineIDs[0]];
+                const [a, b] = [line.a, line.b]; //dont need c
+                Cx = `\\left\\{${a}=0:\\ ${p1}_{x},\\ \\fr${a}c{\\left(\\fr${a}c{${p1}_{x}^{2}+${p1}_{y}^{2}-${p2}_{x}^{2}-${p2}_{y}^{2}}{2${p1}_{y}-2${p2}_{y}}-\\fr${a}c{-${b}${p1}_{x}+${a}${p1}_{y}}{${a}}\\right)}{\\left(\\fr${a}c{${b}}{${a}}+\\fr${a}c{2${p1}_{x}-2${p2}_{x}}{2${p1}_{y}-2${p2}_{y}}\\right)}\\right\\}`;
+                Cy = `\\left\\{${b}=0:\\ ${p1}_{y},\\ \\fr${a}c{\\left(\\fr${a}c{${p1}_{x}^{2}+${p1}_{y}^{2}-${p2}_{x}^{2}-${p2}_{y}^{2}}{2${p1}_{x}-2${p2}_{x}}-\\fr${a}c{${b}${p1}_{x}-${a}${p1}_{y}}{${b}}\\right)}{\\left(\\fr${a}c{${a}}{${b}}+\\fr${a}c{2${p1}_{y}-2${p2}_{y}}{2${p1}_{x}-2${p2}_{x}}\\right)}\\right\\}`;
+                Cr = `\\sqrt{\\left(${p1}_{x}-${id}_{x}\\right)^{2}+\\left(${p1}_{y}-${id}_{y}\\right)^{2}}`;
+                Cx = `\\left\\{a=0:\\ x_{1},\\ \\frac{\\left(\\frac{x_{1}^{2}+y_{1}^{2}-x_{2}^{2}-y_{2}^{2}}{2y_{1}-2y_{2}}-\\frac{-bx_{1}+ay_{1}}{a}\\right)}{\\left(\\frac{b}{a}+\\frac{2x_{1}-2x_{2}}{2y_{1}-2y_{2}}\\right)}\\right\\}`;
+                console.log(a);
+                Cx = Cx.replaceAll("a", `(${a})`); //a and b are expressions, which is what is causing all these issues
+                Cx = Cx.replaceAll("b", `${b}`);
+                Cx = Cx.replaceAll("x_{1}", `${p1}_{x}`);
+                Cx = Cx.replaceAll("y_{1}", `${p1}_{y}`);
+                Cx = Cx.replaceAll("x_{2}", `${p2}_{x}`);
+                Cx = Cx.replaceAll("y_{2}", `${p2}_{y}`);
+            }
             //Circle [2 points which are diameter]: pointIDs: [p1, p2]
             //Circle [center and radius]: pointIDs: [C], data: [r]
             //Circle [center and point]: pointIDs: [C, p1]
             //Circle [center and tangent] (having got formula yet)
-            //Then handle separately by generating C_{id}x, C_{id}y and C_{id}r
-            //Release 4 expressions: 3 above and circle equation (x - a)^2 + (y - b)^2 = r^2
+            //Then handle separately by generating {id}_x, {id}_y and {id}_r
+            const centerX = { id: `${id}_{x}`, latex: `${id}_{x} = ${Cx}` };
+            const centerY = { id: `${id}_{y}`, latex: `${id}_{y} = ${Cy}` };
+            const radius = { id: `${id}_{r}`, latex: `${id}_{r} = ${Cr}` };
+            const equation = { id: id, latex: `\\left(x-${id}_{x}\\right)^{2}+\\left(y-${id}_{y}\\right)^{2}=${id}_{r}^{2}` };
+            shapeExpressions.push(centerX, centerY, radius, equation);
         }
     }
     //point constraints: write the dependant point in terms of the independant point
@@ -225,9 +254,9 @@ const Main = () => {
     };
     //Formats:
     //Point: a
-    //Point constraint: abV or abH
-    //Line: AB
-    //Line Constraint: ABa
+    //Point constraint: - (when no distance) or S_{independent}{dependent}, e.g. S_{ab}
+    //Line: AB (alphabetical order)
+    //Line Constraint: - (array not dictionary)
     //Shape: A
     POINTS["a"] = Point("a", 0, 10);
     POINTS["b"] = Point("b", 10, 0);
@@ -243,8 +272,16 @@ const Main = () => {
     POINTS["j"] = Point("j", 0, 0);
     POINTS["k"] = Point("k", 0, 0);
     POINTS["l"] = Point("l", 0, 0);
-    SHAPES["A"] = Shape("A", "rectangle", ["h", "j", "k", "l"], [], [5, 5]);
+    SHAPES["A"] = Shape("A", "rectangle", ["h", "j", "k", "l"], [], [3, 3]);
+    //Circles
+    SHAPES["B"] = Shape("B", "circle", ["b", "c", "d"], [], []);
+    SHAPES["C"] = Shape("C", "circle", ["j", "a"], ["HJ"], []);
+    //In future may also want to switch RenderScene() function from using reference values to deep copied values
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
     UpdateCalculator(expressions);
 };
 Main();
+//TODO
+//IMPLEMENT ALL CIRCLE CONSTRUCTIONS
+//IMPLEMENT DEPENDENCY GRAPH FUNCTION
+//USE DEPENDENCY GRAPH TO CHECK FOR 'OVER-CONSTRAINING'
