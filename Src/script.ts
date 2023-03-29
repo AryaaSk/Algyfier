@@ -209,20 +209,11 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
             if (shape.pointIDs.length == 2 && shape.lineIDs.length == 1) {
                 const [p1, p2] = shape.pointIDs;
                 const line = lines[shape.lineIDs[0]]
-                const [a, b] = [line.a, line.b]; //dont need c
+                const [a, b] = [line.a, line.b]; //define 2 new variables to hold information of line's a and b
 
-                Cx = `\\left\\{${a}=0:\\ ${p1}_{x},\\ \\fr${a}c{\\left(\\fr${a}c{${p1}_{x}^{2}+${p1}_{y}^{2}-${p2}_{x}^{2}-${p2}_{y}^{2}}{2${p1}_{y}-2${p2}_{y}}-\\fr${a}c{-${b}${p1}_{x}+${a}${p1}_{y}}{${a}}\\right)}{\\left(\\fr${a}c{${b}}{${a}}+\\fr${a}c{2${p1}_{x}-2${p2}_{x}}{2${p1}_{y}-2${p2}_{y}}\\right)}\\right\\}`;
-                Cy = `\\left\\{${b}=0:\\ ${p1}_{y},\\ \\fr${a}c{\\left(\\fr${a}c{${p1}_{x}^{2}+${p1}_{y}^{2}-${p2}_{x}^{2}-${p2}_{y}^{2}}{2${p1}_{x}-2${p2}_{x}}-\\fr${a}c{${b}${p1}_{x}-${a}${p1}_{y}}{${b}}\\right)}{\\left(\\fr${a}c{${a}}{${b}}+\\fr${a}c{2${p1}_{y}-2${p2}_{y}}{2${p1}_{x}-2${p2}_{x}}\\right)}\\right\\}`;
+                Cx = `\\left\\{${a}=0:\\ ${p1}_{x},\\ \\frac{\\left(\\frac{${p1}_{x}^{2}+${p1}_{y}^{2}-${p2}_{x}^{2}-${p2}_{y}^{2}}{2${p1}_{y}-2${p2}_{y}}-\\frac{-${b}${p1}_{x}+${a}${p1}_{y}}{${a}}\\right)}{\\left(\\frac{${b}}{${a}}+\\frac{2${p1}_{x}-2${p2}_{x}}{2${p1}_{y}-2${p2}_{y}}\\right)}\\right\\}`;
+                Cy = `\\left\\{${b}=0:\\ ${p1}_{y},\\ \\frac{\\left(\\frac{${p1}_{x}^{2}+${p1}_{y}^{2}-${p2}_{x}^{2}-${p2}_{y}^{2}}{2${p1}_{x}-2${p2}_{x}}-\\frac{${b}${p1}_{x}-${a}${p1}_{y}}{${b}}\\right)}{\\left(\\frac{${a}}{${b}}+\\frac{2${p1}_{y}-2${p2}_{y}}{2${p1}_{x}-2${p2}_{x}}\\right)}\\right\\}`;
                 Cr = `\\sqrt{\\left(${p1}_{x}-${id}_{x}\\right)^{2}+\\left(${p1}_{y}-${id}_{y}\\right)^{2}}`;
-
-                Cx = `\\left\\{a=0:\\ x_{1},\\ \\frac{\\left(\\frac{x_{1}^{2}+y_{1}^{2}-x_{2}^{2}-y_{2}^{2}}{2y_{1}-2y_{2}}-\\frac{-bx_{1}+ay_{1}}{a}\\right)}{\\left(\\frac{b}{a}+\\frac{2x_{1}-2x_{2}}{2y_{1}-2y_{2}}\\right)}\\right\\}`;
-                console.log(a)
-                Cx = Cx.replaceAll("a", `(${a})`); //a and b are expressions, which is what is causing all these issues
-                Cx = Cx.replaceAll("b", `${b}`);
-                Cx = Cx.replaceAll("x_{1}", `${p1}_{x}`);
-                Cx = Cx.replaceAll("y_{1}", `${p1}_{y}`);
-                Cx = Cx.replaceAll("x_{2}", `${p2}_{x}`);
-                Cx = Cx.replaceAll("y_{2}", `${p2}_{y}`);
             }
 
             //Circle [2 points which are diameter]: pointIDs: [p1, p2]
@@ -379,7 +370,7 @@ const Main = () => {
 
     //Circles
     SHAPES["B"] = Shape("B", "circle", ["b", "c", "d"], [], []);
-    SHAPES["C"] = Shape("C", "circle", ["j", "a"], ["HJ"], []);
+    SHAPES["C"] = Shape("C", "circle", ["k", "a"], ["JK"], []);
 
     //In future may also want to switch RenderScene() function from using reference values to deep copied values
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
