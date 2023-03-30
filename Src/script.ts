@@ -130,25 +130,40 @@ const UpdateCalculator = (expressions: Desmos.ExpressionState[]) => {
 }
 
 const UpdateDependencyGraph = (dependencyGraph: { [id: string] : string[] }, points: { [id: string] : Point }, lines: { [id: string] : Line }, shapes: { [id: string] : Shape }, pointConstraints: PointConstraint[], lineConstraints: LineConstraint[]) => {
+    //will alter the original the original dependency graph object passed in
     dependencyGraph = {}; //depGraph[id] returns list of ids which it is dependent on
 
-    /*
-    //point
-    DEPENDANCY_GRAPH["a"] = [];
+    //first initiailise all points, lines and shapes
+    for (const id in points) {
+        dependencyGraph[id] = [];
+    }
+    for (const id in lines) {
+        const line = lines[id];
+        dependencyGraph[id] = [line.point1ID, line.point2ID];
+    }
+    for (const id in shapes) {
+        const shape = shapes[id];
+        dependencyGraph[id] = [];
+        dependencyGraph[id] = dependencyGraph[id].concat(shape.pointIDs); //don't add unneccesary data to the shape construction
+        dependencyGraph[id] = dependencyGraph[id].concat(shape.lineIDs);
+    }
 
-    //point constraint
-    DEPENDANCY_GRAPH["d"].push("a") //d is dependent on a, don't know if it is vertical or horizontal
-    //also need a way to conventionalise if d had a distance assosiated with a, could use the id given to the external variables
+    for (const pointConstraint of pointConstraints) {
+        //p1 is dependent on p2
+        const [independantID, dependentID] = [pointConstraint.point2ID, pointConstraint.point1ID]
+        dependencyGraph[dependentID].push(independantID);
+        if (pointConstraint.distance != undefined) {
+            const externalVariable = "S" + `_{${independantID}${dependentID}}`;
+            dependencyGraph[dependentID].push(externalVariable);
+        }
+    }
 
-    //line
-    DEPENDANCY_GRAPH["AB"] = ["a", "b"];
-
-    //line constraint
-    DEPENDANCY_GRAPH["c"].push("AB"); //c must be on AB
-
-    //for square, apply point constraints and line constraints, these will have already been done from above
-    //for circle will need to add dependencies depending on the circle's construction
-    */
+    for (const lineConstraint of lineConstraints) {
+        //point is dependent on line
+        //May differentiate between x and y constraining in future, but for now will just treat it all as 1 point
+        const [pointID, lineID] = [lineConstraint.pointID, lineConstraint.lineID];
+        dependencyGraph[lineID].push(pointID);
+    }
 }
 
 const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : Line }, shapes: { [id: string] : Shape }, pointConstraints: PointConstraint[], lineConstraints: LineConstraint[]) => {
@@ -195,7 +210,6 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
             let [Cx, Cy, Cr] = ["", "", ""];
             //IDs: Cx -> id_{x}, etc...
 
-
             //Need to identify which type it is:
             //Circle [3 points]: pointIDs: [p1, p2, p3]
             if (shape.pointIDs.length == 3) {
@@ -206,7 +220,7 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
             }
 
             //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
-            if (shape.pointIDs.length == 2 && shape.lineIDs.length == 1) {
+            else if (shape.pointIDs.length == 2 && shape.lineIDs.length == 1) {
                 const [p1, p2] = shape.pointIDs;
                 const line = lines[shape.lineIDs[0]]
                 const [a, b] = [line.a, line.b]; //define 2 new variables to hold information of line's a and b
@@ -217,8 +231,28 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
             }
 
             //Circle [2 points which are diameter]: pointIDs: [p1, p2]
+            else if (shape.pointIDs.length == 2) {
+                const [p1, p2] = shape.pointIDs;
+                Cx = `\\frac{${p1}_{x}+${p2}_{x}}{2}`;
+                Cy = `\\frac{${p1}_{y}+${p2}_{y}}{2}`;
+                Cr = `\\frac{1}{2}\\sqrt{\\left(${p1}_{x}-${p2}_{x}\\right)^{2}+\\left(${p1}_{y}-${p2}_{y}\\right)^{2}}`
+            }
+
             //Circle [center and radius]: pointIDs: [C], data: [r]
-            //Circle [center and point]: pointIDs: [C, p1]
+            else if (shape.pointIDs.length == 1 && shape.data.length == 1) {
+                const point = shape.pointIDs[0];
+                const radius = shape.data[0];
+                Cx = point + "_{x}";
+                Cy = point + "_{y}";
+                Cr = String(radius);
+
+                //external variable initialised so that user can adjust it as well
+                const radiusVariableID = `${id}_{r}`;
+                const externalVariable: Desmos.ExpressionState = { id: radiusVariableID, latex: `${radiusVariableID} = ${radius}`};
+                externalVariables.push(externalVariable);
+            }
+
+            //Circle [center and point]: pointIDs: [C, p1] - NEED TO FIND A WAY TO DIFFERENTIATE THIS FROM THE ORIGINAL 2 POINTS DIAMETER CASE
             //Circle [center and tangent] (having got formula yet)
 
             //Then handle separately by generating {id}_x, {id}_y and {id}_r
@@ -371,6 +405,8 @@ const Main = () => {
     //Circles
     SHAPES["B"] = Shape("B", "circle", ["b", "c", "d"], [], []);
     SHAPES["C"] = Shape("C", "circle", ["k", "a"], ["JK"], []);
+    SHAPES["D"] = Shape("D", "circle", ["a", "h"], [], []);
+    SHAPES["E"] = Shape("E", "circle", ["b"], [], [5]);
 
     //In future may also want to switch RenderScene() function from using reference values to deep copied values
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
@@ -379,6 +415,7 @@ const Main = () => {
 Main();
 
 //TODO
-//IMPLEMENT ALL CIRCLE CONSTRUCTIONS
-//IMPLEMENT DEPENDENCY GRAPH FUNCTION
+//IMPLEMENT ALL CIRCLE CONSTRUCTIONS - done (mostly)
+//IMPLEMENT DEPENDENCY GRAPH FUNCTION - dont (but not tested)
 //USE DEPENDENCY GRAPH TO CHECK FOR 'OVER-CONSTRAINING'
+//Implment polygons (more than just 4 sides)
