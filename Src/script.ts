@@ -39,7 +39,7 @@ interface Shape {
     pointIDs: string[];
     lineIDs: string[];
 
-    data: number[]; //differet data assosiated with different shapes, e.g. for circle: [Cx, Cy, r]
+    data: (number | string)[]; //differet data assosiated with different shapes, e.g. for circle: [Cx, Cy, r]
 
     //Conventions:
     //Square/Rectangle: pointIDs: [independent (bottom left), bottom right, top right, top left], data: [height, width]
@@ -65,7 +65,7 @@ const Line = (ID: string, point1ID: string, point2ID: string): Line => {
 const LineConstraint = (lineID: string, pointID: string, constraintType: "x" | "y" ): LineConstraint => {
     return { lineID: lineID, pointID: pointID, constraintType: constraintType };
 }
-const Shape = (ID: string, type: "circle" | "rectangle", pointIDs: string[], lineIDs: string[], data: number[]): Shape => {
+const Shape = (ID: string, type: "circle" | "rectangle", pointIDs: string[], lineIDs: string[], data: (number | string)[]): Shape => {
     return { ID: ID, type: type, pointIDs: pointIDs, lineIDs: lineIDs, data: data };
 }
 
@@ -187,8 +187,8 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
             //Just add some point constraints
             const [height, width] = shape.data;
             const [bl, br, tr, tl] = shape.pointIDs;
-            pointConstraints.push(PointConstraint(br, bl, "h", width));
-            pointConstraints.push(PointConstraint(tl, bl, "v", height));
+            pointConstraints.push(PointConstraint(br, bl, "h", <number>width));
+            pointConstraints.push(PointConstraint(tl, bl, "v", <number>height));
             pointConstraints.push(PointConstraint(tr, br, "v"));
             pointConstraints.push(PointConstraint(tr, tl, "h"));
 
@@ -231,7 +231,7 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
             }
 
             //Circle [2 points which are diameter]: pointIDs: [p1, p2]
-            else if (shape.pointIDs.length == 2) {
+            else if (shape.pointIDs.length == 2 && shape.data.length == 0) {
                 const [p1, p2] = shape.pointIDs;
                 Cx = `\\frac{${p1}_{x}+${p2}_{x}}{2}`;
                 Cy = `\\frac{${p1}_{y}+${p2}_{y}}{2}`;
@@ -252,7 +252,14 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
                 externalVariables.push(externalVariable);
             }
 
-            //Circle [center and point]: pointIDs: [C, p1] - NEED TO FIND A WAY TO DIFFERENTIATE THIS FROM THE ORIGINAL 2 POINTS DIAMETER CASE
+            //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"] //to differentiate from the diameter construction
+            else if (shape.pointIDs.length == 2 && shape.data[0] == "center+point") {
+                const [center, point] = shape.pointIDs;
+                Cx = center + "_{x}";
+                Cy = center + "_{y}";
+                Cr = `\\sqrt{\\left(${id}_{x}-${point}_{x}\\right)^{2}+\\left(${id}_{y}-${point}_{y}\\right)^{2}}`
+            }
+
             //Circle [center and tangent] (having got formula yet)
 
             //Then handle separately by generating {id}_x, {id}_y and {id}_r
@@ -407,6 +414,7 @@ const Main = () => {
     SHAPES["C"] = Shape("C", "circle", ["k", "a"], ["JK"], []);
     SHAPES["D"] = Shape("D", "circle", ["a", "h"], [], []);
     SHAPES["E"] = Shape("E", "circle", ["b"], [], [5]);
+    SHAPES["F"] = Shape("F", "circle", ["h", "l"], [], ["center+point"]);
 
     //In future may also want to switch RenderScene() function from using reference values to deep copied values
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
@@ -415,7 +423,15 @@ const Main = () => {
 Main();
 
 //TODO
-//IMPLEMENT ALL CIRCLE CONSTRUCTIONS - done (mostly)
+//IMPLEMENT ALL CIRCLE CONSTRUCTIONS - done
 //IMPLEMENT DEPENDENCY GRAPH FUNCTION - dont (but not tested)
 //USE DEPENDENCY GRAPH TO CHECK FOR 'OVER-CONSTRAINING'
 //Implment polygons (more than just 4 sides)
+
+//Remove ids from objects (don't need as they are stored with id in dictionary)
+//New line construction: Line with point and gradient (∆y and ∆x)
+//New line constraint: Place point in a ratio on a line from point a -> b
+//New line constraint: Constrain point to circle
+//Also need to add ability to calculate areas to actually solve the problems
+
+//MOST IMPORTANTLY - NEED UI

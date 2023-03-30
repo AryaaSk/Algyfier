@@ -156,7 +156,7 @@ const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) =
                 Cr = `\\sqrt{\\left(${p1}_{x}-${id}_{x}\\right)^{2}+\\left(${p1}_{y}-${id}_{y}\\right)^{2}}`;
             }
             //Circle [2 points which are diameter]: pointIDs: [p1, p2]
-            else if (shape.pointIDs.length == 2) {
+            else if (shape.pointIDs.length == 2 && shape.data.length == 0) {
                 const [p1, p2] = shape.pointIDs;
                 Cx = `\\frac{${p1}_{x}+${p2}_{x}}{2}`;
                 Cy = `\\frac{${p1}_{y}+${p2}_{y}}{2}`;
@@ -174,7 +174,13 @@ const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) =
                 const externalVariable = { id: radiusVariableID, latex: `${radiusVariableID} = ${radius}` };
                 externalVariables.push(externalVariable);
             }
-            //Circle [center and point]: pointIDs: [C, p1] - NEED TO FIND A WAY TO DIFFERENTIATE THIS FROM THE ORIGINAL 2 POINTS DIAMETER CASE
+            //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"] //to differentiate from the diameter construction
+            else if (shape.pointIDs.length == 2 && shape.data[0] == "center+point") {
+                const [center, point] = shape.pointIDs;
+                Cx = center + "_{x}";
+                Cy = center + "_{y}";
+                Cr = `\\sqrt{\\left(${id}_{x}-${point}_{x}\\right)^{2}+\\left(${id}_{y}-${point}_{y}\\right)^{2}}`;
+            }
             //Circle [center and tangent] (having got formula yet)
             //Then handle separately by generating {id}_x, {id}_y and {id}_r
             const centerX = { id: `${id}_{x}`, latex: `${id}_{x} = ${Cx}` };
@@ -300,13 +306,20 @@ const Main = () => {
     SHAPES["C"] = Shape("C", "circle", ["k", "a"], ["JK"], []);
     SHAPES["D"] = Shape("D", "circle", ["a", "h"], [], []);
     SHAPES["E"] = Shape("E", "circle", ["b"], [], [5]);
+    SHAPES["F"] = Shape("F", "circle", ["h", "l"], [], ["center+point"]);
     //In future may also want to switch RenderScene() function from using reference values to deep copied values
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
     UpdateCalculator(expressions);
 };
 Main();
 //TODO
-//IMPLEMENT ALL CIRCLE CONSTRUCTIONS - done (mostly)
+//IMPLEMENT ALL CIRCLE CONSTRUCTIONS - done
 //IMPLEMENT DEPENDENCY GRAPH FUNCTION - dont (but not tested)
 //USE DEPENDENCY GRAPH TO CHECK FOR 'OVER-CONSTRAINING'
 //Implment polygons (more than just 4 sides)
+//Remove ids from objects (don't need as they are stored with id in dictionary)
+//New line construction: Line with point and gradient (∆y and ∆x)
+//New line constraint: Place point in a ratio on a line from point a -> b
+//New line constraint: Constrain point to circle
+//Also need to add ability to calculate areas to actually solve the problems
+//MOST IMPORTANTLY - NEED UI
