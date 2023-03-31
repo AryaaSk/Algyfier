@@ -114,7 +114,6 @@ const Main = () => {
 
     SHAPES["A"] = Shape('circle', ["a", "b"], ["A_"], []);
 
-
     //In future may also want to switch RenderScene() function from using reference values to deep copied values
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
     UpdateCalculator(expressions);
