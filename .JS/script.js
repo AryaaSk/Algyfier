@@ -4,26 +4,41 @@ let LINES = {};
 let SHAPES = {};
 let POINT_CONTRAINTS = [];
 let LINE_CONSTRAINTS = [];
-const Point = (ID, x, y) => {
-    return { ID: ID, x: x, y: y };
+const Point = (x, y) => {
+    return { x: x, y: y };
 };
 const PointConstraint = (point1ID, point2ID, relationship, distance) => {
     return { point1ID: point1ID, point2ID: point2ID, relationship: relationship, distance: distance };
 };
-const Line = (ID, point1ID, point2ID) => {
-    const line = { ID: ID, point1ID: point1ID, point2ID: point2ID, a: "", b: "", c: "", equation: "" };
+const Line = (point1ID, point2ID, gradient) => {
+    const line = { point1ID: point1ID, point2ID: point2ID, gradient: gradient, a: "", b: "", c: "", equation: "" };
     RecomputeLine(line);
     return line;
 };
 const LineConstraint = (lineID, pointID, constraintType) => {
     return { lineID: lineID, pointID: pointID, constraintType: constraintType };
 };
-const Shape = (ID, type, pointIDs, lineIDs, data) => {
-    return { ID: ID, type: type, pointIDs: pointIDs, lineIDs: lineIDs, data: data };
+const Shape = (type, pointIDs, lineIDs, data) => {
+    return { type: type, pointIDs: pointIDs, lineIDs: lineIDs, data: data };
 };
 const RecomputeLine = (line) => {
     const [x1, y1] = [`${line.point1ID}_{x}`, `${line.point1ID}_{y}`];
     const [x2, y2] = [`${line.point2ID}_{x}`, `${line.point2ID}_{y}`];
+    /*
+    //if gradient is used, just convert from form y = mx + c
+    let [a, b, c] = ["", "", ""];
+
+    if (line.gradient != undefined) {
+        a = `-${line.gradient}`;
+        b = "1";
+        c = `${line.point1ID}_{x} - ${line.point1ID}_{y}`;
+    }
+    else {
+        a = `(${y1} - ${y2})`;
+        b = `(${x2} - ${x1})`;
+        c = `(${x1}${y2} - ${x2}${y1})`;
+    }
+    */
     const a = `(${y1} - ${y2})`;
     const b = `(${x2} - ${x1})`;
     const c = `(${x1}${y2} - ${x2}${y1})`;
@@ -132,7 +147,7 @@ const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) =
             for (const lineID of newLineIDs) {
                 const p1 = lineID[0].toLowerCase();
                 const p2 = lineID[1].toLowerCase();
-                lines[lineID] = Line(lineID, p1, p2);
+                lines[lineID] = Line(p1, p2);
             }
         }
         else if (shape.type == "circle") {
@@ -190,6 +205,24 @@ const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) =
             shapeExpressions.push(centerX, centerY, radius, equation);
         }
     }
+    //lines
+    for (const id in lines) {
+        const line = lines[id];
+        if (line.gradient != undefined) {
+            const gradientVariableID = `m_{${id}}`;
+            const externalVariable = { id: gradientVariableID, latex: `${gradientVariableID} = ${line.gradient}` };
+            externalVariables.push(externalVariable);
+            //Create new point which is 1 more than p1 horizontally and m more than p2 vertically
+            const p1 = line.point1ID;
+            const mPointID = `${id}`; //C stands for control, need a better id in the future
+            points[mPointID] = Point(`${p1}_{x} + 1`, `${p1}_{y} + ${gradientVariableID}`);
+            line.point2ID = mPointID;
+            RecomputeLine(line);
+        }
+        const equation = line.equation;
+        const l = { id: id, latex: equation };
+        lineExpressions.push(l);
+    }
     //point constraints: write the dependant point in terms of the independant point
     for (const constraint of pointConstraints) {
         const dependentID = constraint.point1ID;
@@ -211,7 +244,7 @@ const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) =
             }
         }
         if (distance != undefined) {
-            const externalVariable = { id: id, latex: `${id} = ${distance}`, sliderBounds: { min: 0, max: 10, step: "" } };
+            const externalVariable = { id: id, latex: `${id} = ${distance}` };
             externalVariables.push(externalVariable);
         }
     }
@@ -220,7 +253,7 @@ const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) =
         const dependent = constraint.constraintType;
         const point = points[constraint.pointID];
         const line = lines[constraint.lineID];
-        const [px, py] = [point.ID + "_{x}", point.ID + "_{y}"];
+        const [px, py] = [constraint.pointID + "_{x}", constraint.pointID + "_{y}"];
         //need to rearrange equation for x or y
         const [a, b, c] = [line.a, line.b, line.c];
         if (dependent == "x") {
@@ -241,13 +274,6 @@ const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) =
         const pY = { id: `${id}_{y}`, latex: `${id}_{y} = ${y}` };
         const p = { id: id, latex: `${id} = (${id}_{x}, ${id}_{y})`, label: id, showLabel: true };
         pointExpressions.push(p, pX, pY);
-    }
-    //lines: already have equation, just plot line
-    for (const id in lines) {
-        const line = lines[id];
-        const equation = line.equation;
-        const l = { id: id, latex: equation };
-        lineExpressions.push(l);
     }
     //also need to check if some points are 'over-constrained'
     //e.g. a point has 2 variables of freedom (x and y), so if there are more than 2 constraints acting on it then it is 'over-constrained'
@@ -283,30 +309,31 @@ const Main = () => {
     //Formats:
     //Point: a
     //Point constraint: - (when no distance) or S_{independent}{dependent}, e.g. S_{ab}
-    //Line: AB (alphabetical order)
+    //Line: AB (alphabetical order) ot just A is defined with gradient
     //Line Constraint: - (array not dictionary)
     //Shape: A
-    POINTS["a"] = Point("a", 0, 10);
-    POINTS["b"] = Point("b", 10, 0);
-    LINES["AB"] = Line("AB", "a", "b");
-    POINTS["c"] = Point("c", 5, "");
+    POINTS["a"] = Point(0, 10);
+    POINTS["b"] = Point(10, 0);
+    LINES["AB"] = Line("a", "b");
+    POINTS["c"] = Point(5, "");
     LINE_CONSTRAINTS.push(LineConstraint("AB", "c", "y"));
-    POINTS["d"] = Point("d", "", "");
+    POINTS["d"] = Point("", "");
     POINT_CONTRAINTS.push(PointConstraint("d", "a", "h")); //inconsistencies arise when you try and supply too many constraints, e.g. a H and V to 2 points, but then also a distance from one point
     POINT_CONTRAINTS.push(PointConstraint("d", "b", "v"));
     //Square
     //Values given in Point() construction will be overwritten by constraints anyway
-    POINTS["h"] = Point("h", 0, 0);
-    POINTS["j"] = Point("j", 0, 0);
-    POINTS["k"] = Point("k", 0, 0);
-    POINTS["l"] = Point("l", 0, 0);
-    SHAPES["A"] = Shape("A", "rectangle", ["h", "j", "k", "l"], [], [3, 3]);
+    POINTS["h"] = Point(0, 0);
+    POINTS["j"] = Point(0, 0);
+    POINTS["k"] = Point(0, 0);
+    POINTS["l"] = Point(0, 0);
+    SHAPES["A"] = Shape("rectangle", ["h", "j", "k", "l"], [], [3, 3]);
     //Circles
-    SHAPES["B"] = Shape("B", "circle", ["b", "c", "d"], [], []);
-    SHAPES["C"] = Shape("C", "circle", ["k", "a"], ["JK"], []);
-    SHAPES["D"] = Shape("D", "circle", ["a", "h"], [], []);
-    SHAPES["E"] = Shape("E", "circle", ["b"], [], [5]);
-    SHAPES["F"] = Shape("F", "circle", ["h", "l"], [], ["center+point"]);
+    SHAPES["B"] = Shape("circle", ["b", "c", "d"], [], []);
+    SHAPES["C"] = Shape("circle", ["k", "a"], ["JK"], []);
+    SHAPES["D"] = Shape("circle", ["a", "h"], [], []);
+    SHAPES["E"] = Shape("circle", ["b"], [], [5]);
+    SHAPES["F"] = Shape("circle", ["h", "l"], [], ["center+point"]);
+    LINES["A"] = Line("a", "", "5");
     //In future may also want to switch RenderScene() function from using reference values to deep copied values
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
     UpdateCalculator(expressions);
@@ -318,7 +345,7 @@ Main();
 //USE DEPENDENCY GRAPH TO CHECK FOR 'OVER-CONSTRAINING'
 //Implment polygons (more than just 4 sides)
 //Remove ids from objects (don't need as they are stored with id in dictionary)
-//New line construction: Line with point and gradient (∆y and ∆x)
+//New line construction: Line with point and gradient (∆y and ∆x) - implemented, but seems quite buggy
 //New line constraint: Place point in a ratio on a line from point a -> b
 //New line constraint: Constrain point to circle
 //Also need to add ability to calculate areas to actually solve the problems
