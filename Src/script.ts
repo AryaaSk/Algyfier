@@ -2,93 +2,19 @@ let POINTS: { [id: string] : Point } = {};
 let LINES: { [id: string] : Line } = {};
 let SHAPES: { [id: string] : Shape } = {};
 
+//Conventions
+//Point: a
+//Point constraint: - (when no distance) or S_{independent}{dependent}, e.g. S_{ab}
+//Line: AB (alphabetical order) ot just A if defined with gradient
+//Line Constraint: - (array not dictionary)
+//Shape: A
+
 let POINT_CONTRAINTS: PointConstraint[] = [];
 let LINE_CONSTRAINTS: LineConstraint[] = [];
 
-interface Point {
-    x: number | string;
-    y: number | string;
-}
-interface PointConstraint {
-    //p1 is horizontal to p2
-    point1ID: string; //dependent
-    point2ID: string; //independent
-    relationship: "v" | "h"; //e.g. if relationship was vertical, point 2 must be vertical to point 1
-    distance?: number;
-}
-interface Line {
-    //ID: string; //always have capital p1 -> p2, (alphabetical order)
-    point1ID: string;
-    point2ID: string;
-    gradient?: string; //if gradient is used then point2 will be overwritten
-
-    //will be generated when initialising the line
-    a: string;
-    b: string;
-    c: string;
-    equation: string;
-}
-interface LineConstraint {
-    //point must lie on line, will use x or y constraining depending on the situation
-    lineID: string; 
-    pointID: string;
-    constraintType: "x" | "y";
-}
-interface Shape {
-    type: "circle" | "rectangle"; //rectangle may be handled differently as it must control points rather than being defined implicitally
-    pointIDs: string[];
-    lineIDs: string[];
-
-    data: (number | string)[]; //differet data assosiated with different shapes, e.g. for circle: [Cx, Cy, r]
-
-    //Conventions:
-    //Square/Rectangle: pointIDs: [independent (bottom left), bottom right, top right, top left], data: [height, width]
-    //Circle [3 points]: pointIDs: [p1, p2, p3]
-    //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
-    //Circle [2 points which are diameter]: pointIDs: [p1, p2]
-    //Circle [center and radius]: pointIDs: [C], data: [r]
-    //Circle [center and point]: pointIDs: [C, p1]
-    //Circle [center and tangent] (having got formula yet)
-}
-
-const Point = (x: number | string, y: number | string): Point => {
-    return { x: x, y: y  };
-}
-const PointConstraint = (point1ID: string, point2ID: string, relationship: "v" | "h", distance?: number): PointConstraint => {
-    return { point1ID: point1ID, point2ID: point2ID, relationship: relationship, distance: distance };
-}
-const Line = (point1ID: string, point2ID: string, gradient?: string): Line => {
-    const line = { point1ID: point1ID, point2ID: point2ID, gradient: gradient, a: "", b: "", c: "", equation: "" };
-    RecomputeLine(line);
-    return line;
-}
-const LineConstraint = (lineID: string, pointID: string, constraintType: "x" | "y" ): LineConstraint => {
-    return { lineID: lineID, pointID: pointID, constraintType: constraintType };
-}
-const Shape = (type: "circle" | "rectangle", pointIDs: string[], lineIDs: string[], data: (number | string)[]): Shape => {
-    return { type: type, pointIDs: pointIDs, lineIDs: lineIDs, data: data };
-}
-
-
 const RecomputeLine = (line: Line) => {
     const [x1, y1] = [`${line.point1ID}_{x}`, `${line.point1ID}_{y}`];
-    const [x2, y2] = [`${line.point2ID}_{x}`, `${line.point2ID}_{y}`];
-
-    /*
-    //if gradient is used, just convert from form y = mx + c
-    let [a, b, c] = ["", "", ""];
-
-    if (line.gradient != undefined) {
-        a = `-${line.gradient}`;
-        b = "1";
-        c = `${line.point1ID}_{x} - ${line.point1ID}_{y}`;
-    }
-    else {
-        a = `(${y1} - ${y2})`;
-        b = `(${x2} - ${x1})`;
-        c = `(${x1}${y2} - ${x2}${y1})`;
-    }
-    */
+    const [x2, y2] = [`${line.point2ID}_{x}`, `${line.point2ID}_{y}`]; //if gradient is used to construct line, then this will be updated before the line is drawn
 
     const a = `(${y1} - ${y2})`;
     const b = `(${x2} - ${x1})`;
@@ -146,252 +72,6 @@ const UpdateCalculator = (expressions: Desmos.ExpressionState[]) => {
     CALCULATOR.setExpressions(expressions); //add new ones
 }
 
-const UpdateDependencyGraph = (dependencyGraph: { [id: string] : string[] }, points: { [id: string] : Point }, lines: { [id: string] : Line }, shapes: { [id: string] : Shape }, pointConstraints: PointConstraint[], lineConstraints: LineConstraint[]) => {
-    //will alter the original the original dependency graph object passed in
-    dependencyGraph = {}; //depGraph[id] returns list of ids which it is dependent on
-
-    //first initiailise all points, lines and shapes
-    for (const id in points) {
-        dependencyGraph[id] = [];
-    }
-    for (const id in lines) {
-        const line = lines[id];
-        dependencyGraph[id] = [line.point1ID, line.point2ID];
-    }
-    for (const id in shapes) {
-        const shape = shapes[id];
-        dependencyGraph[id] = [];
-        dependencyGraph[id] = dependencyGraph[id].concat(shape.pointIDs); //don't add unneccesary data to the shape construction
-        dependencyGraph[id] = dependencyGraph[id].concat(shape.lineIDs);
-    }
-
-    for (const pointConstraint of pointConstraints) {
-        //p1 is dependent on p2
-        const [independantID, dependentID] = [pointConstraint.point2ID, pointConstraint.point1ID]
-        dependencyGraph[dependentID].push(independantID);
-        if (pointConstraint.distance != undefined) {
-            const externalVariable = "S" + `_{${independantID}${dependentID}}`;
-            dependencyGraph[dependentID].push(externalVariable);
-        }
-    }
-
-    for (const lineConstraint of lineConstraints) {
-        //point is dependent on line
-        //May differentiate between x and y constraining in future, but for now will just treat it all as 1 point
-        const [pointID, lineID] = [lineConstraint.pointID, lineConstraint.lineID];
-        dependencyGraph[lineID].push(pointID);
-    }
-}
-
-const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : Line }, shapes: { [id: string] : Shape }, pointConstraints: PointConstraint[], lineConstraints: LineConstraint[]) => {
-    //need to add expressions in a specific order to avoid 'in terms of' error
-
-    const pointExpressions: Desmos.ExpressionState[] = [];
-    const lineExpressions: Desmos.ExpressionState[] = [];
-    const externalVariables: Desmos.ExpressionState[] = [];
-    const shapeExpressions: Desmos.ExpressionState[] = [];
-    //before rendering scene, we need to make sure all constraints are in place
-    //Since I am directly modifying the points dictionary, this may cause some reference value issues, however as long as the constraints are correct, then it is 'controlled-overwriting'
-    //CONSTRAINTS OVERWRITE DIRECT VALUES/EQUATIONS
-
-    //shape: for rectangle, will need to consider this as a point constraint
-    //       for circle, simply use information given an construct using points and/or line equations already calculated
-    for (const id in shapes) {
-        const shape = shapes[id];
-        
-        if (shape.type == "rectangle") {
-            //Treat like point constraints: external variable for sideLength, then make all points dependent on independent point (bottom-left)
-            //Just add some point constraints
-            const [height, width] = shape.data;
-            const [bl, br, tr, tl] = shape.pointIDs;
-            pointConstraints.push(PointConstraint(br, bl, "h", <number>width));
-            pointConstraints.push(PointConstraint(tl, bl, "v", <number>height));
-            pointConstraints.push(PointConstraint(tr, br, "v"));
-            pointConstraints.push(PointConstraint(tr, tl, "h"));
-
-            //Also add lines between the points
-            const newLineIDs = [
-                [bl, br].sort().join("").toUpperCase(),
-                [br, tr].sort().join("").toUpperCase(),
-                [tr, tl].sort().join("").toUpperCase(),
-                [tl, bl].sort().join("").toUpperCase()
-            ]
-            for (const lineID of newLineIDs) {
-                const p1 = lineID[0].toLowerCase();
-                const p2 = lineID[1].toLowerCase();
-                lines[lineID] = Line(p1, p2);
-            }
-        }
-
-        else if (shape.type == "circle") {
-            let [Cx, Cy, Cr] = ["", "", ""];
-            //IDs: Cx -> id_{x}, etc...
-
-            //Need to identify which type it is:
-            //Circle [3 points]: pointIDs: [p1, p2, p3]
-            if (shape.pointIDs.length == 3) {
-                const [p1, p2, p3] = shape.pointIDs;
-                Cx = `\\frac{\\left(${p1}_{x}^{2}-${p2}_{x}^{2}+${p1}_{y}^{2}-${p2}_{y}^{2}\\right)\\left(${p1}_{y}-${p3}_{y}\\right)-\\left(${p1}_{x}^{2}-${p3}_{x}^{2}+${p1}_{y}^{2}-${p3}_{y}^{2}\\right)\\left(${p1}_{y}-${p2}_{y}\\right)}{2\\left(\\left(${p3}_{x}-${p1}_{x}\\right)\\left(${p1}_{y}-${p2}_{y}\\right)-\\left(${p2}_{x}-${p1}_{x}\\right)\\left(${p1}_{y}-${p3}_{y}\\right)\\right)}`;
-                Cy = `\\frac{${p1}_{x}^{2}\\left(${p2}_{x}-${p3}_{x}\\right)+${p1}_{x}\\left(-${p2}_{x}^{2}-${p2}_{y}^{2}+${p3}_{x}^{2}+${p3}_{y}^{2}\\right)+${p1}_{y}^{2}\\left(${p2}_{x}-${p3}_{x}\\right)+${p3}_{x}\\left(${p2}_{x}^{2}-${p2}_{x}${p3}_{x}+${p2}_{y}^{2}\\right)-${p2}_{x}${p3}_{y}^{2}}{2\\left(${p1}_{x}\\left(${p3}_{y}-${p2}_{y}\\right)+${p1}_{y}\\left(${p2}_{x}-${p3}_{x}\\right)-${p2}_{x}${p3}_{y}+${p2}_{y}${p3}_{x}\\right)}`;
-                Cr = `\\sqrt{\\left(${p1}_{x}-${id}_{x}\\right)^{2}+\\left(${p1}_{y}-${id}_{y}\\right)^{2}}`;
-            }
-
-            //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
-            else if (shape.pointIDs.length == 2 && shape.lineIDs.length == 1) {
-                const [p1, p2] = shape.pointIDs;
-                const line = lines[shape.lineIDs[0]]
-                const [a, b] = [line.a, line.b]; //define 2 new variables to hold information of line's a and b
-
-                Cx = `\\left\\{${a}=0:\\ ${p1}_{x},\\ \\frac{\\left(\\frac{${p1}_{x}^{2}+${p1}_{y}^{2}-${p2}_{x}^{2}-${p2}_{y}^{2}}{2${p1}_{y}-2${p2}_{y}}-\\frac{-${b}${p1}_{x}+${a}${p1}_{y}}{${a}}\\right)}{\\left(\\frac{${b}}{${a}}+\\frac{2${p1}_{x}-2${p2}_{x}}{2${p1}_{y}-2${p2}_{y}}\\right)}\\right\\}`;
-                Cy = `\\left\\{${b}=0:\\ ${p1}_{y},\\ \\frac{\\left(\\frac{${p1}_{x}^{2}+${p1}_{y}^{2}-${p2}_{x}^{2}-${p2}_{y}^{2}}{2${p1}_{x}-2${p2}_{x}}-\\frac{${b}${p1}_{x}-${a}${p1}_{y}}{${b}}\\right)}{\\left(\\frac{${a}}{${b}}+\\frac{2${p1}_{y}-2${p2}_{y}}{2${p1}_{x}-2${p2}_{x}}\\right)}\\right\\}`;
-                Cr = `\\sqrt{\\left(${p1}_{x}-${id}_{x}\\right)^{2}+\\left(${p1}_{y}-${id}_{y}\\right)^{2}}`;
-            }
-
-            //Circle [2 points which are diameter]: pointIDs: [p1, p2]
-            else if (shape.pointIDs.length == 2 && shape.data.length == 0) {
-                const [p1, p2] = shape.pointIDs;
-                Cx = `\\frac{${p1}_{x}+${p2}_{x}}{2}`;
-                Cy = `\\frac{${p1}_{y}+${p2}_{y}}{2}`;
-                Cr = `\\frac{1}{2}\\sqrt{\\left(${p1}_{x}-${p2}_{x}\\right)^{2}+\\left(${p1}_{y}-${p2}_{y}\\right)^{2}}`
-            }
-
-            //Circle [center and radius]: pointIDs: [C], data: [r]
-            else if (shape.pointIDs.length == 1 && shape.data.length == 1) {
-                const point = shape.pointIDs[0];
-                const radius = shape.data[0];
-                Cx = point + "_{x}";
-                Cy = point + "_{y}";
-                Cr = String(radius);
-
-                //external variable initialised so that user can adjust it as well
-                const radiusVariableID = `${id}_{r}`;
-                const externalVariable: Desmos.ExpressionState = { id: radiusVariableID, latex: `${radiusVariableID} = ${radius}`};
-                externalVariables.push(externalVariable);
-            }
-
-            //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"] //to differentiate from the diameter construction
-            else if (shape.pointIDs.length == 2 && shape.data[0] == "center+point") {
-                const [center, point] = shape.pointIDs;
-                Cx = center + "_{x}";
-                Cy = center + "_{y}";
-                Cr = `\\sqrt{\\left(${id}_{x}-${point}_{x}\\right)^{2}+\\left(${id}_{y}-${point}_{y}\\right)^{2}}`
-            }
-
-            //Circle [center and tangent] (having got formula yet)
-
-            //Then handle separately by generating {id}_x, {id}_y and {id}_r
-            const centerX: Desmos.ExpressionState = { id: `${id}_{x}`, latex: `${id}_{x} = ${Cx}` };
-            const centerY: Desmos.ExpressionState = { id: `${id}_{y}`, latex: `${id}_{y} = ${Cy}` };
-            const radius: Desmos.ExpressionState = { id: `${id}_{r}`, latex: `${id}_{r} = ${Cr}` };
-            const equation: Desmos.ExpressionState = { id: id, latex: `\\left(x-${id}_{x}\\right)^{2}+\\left(y-${id}_{y}\\right)^{2}=${id}_{r}^{2}` };
-            shapeExpressions.push(centerX, centerY, radius, equation);
-        }
-    }
-
-    //lines
-    for (const id in lines) {
-        const line = lines[id];
-        if (line.gradient != undefined) {
-            const gradientVariableID = `m_{${id}}`
-            const externalVariable: Desmos.ExpressionState = { id: gradientVariableID, latex: `${gradientVariableID} = ${line.gradient !}`};
-            externalVariables.push(externalVariable);
-
-            //Create new point which is 1 more than p1 horizontally and m more than p2 vertically
-            const p1 = line.point1ID;
-            const mPointID = `${id}`; //C stands for control, need a better id in the future
-            points[mPointID] = Point(`${p1}_{x} + 1`, `${p1}_{y} + ${gradientVariableID}`);
-            line.point2ID = mPointID
-
-            RecomputeLine(line);
-        }
-
-
-        const equation = line.equation;
-        const l: Desmos.ExpressionState = { id: id, latex: equation };
-        lineExpressions.push(l);
-    }
-
-    //point constraints: write the dependant point in terms of the independant point
-    for (const constraint of pointConstraints) {
-        const dependentID = constraint.point1ID;
-        const independantID = constraint.point2ID;
-
-        //if there is also an assosiated distance then the dependent point has no freedom - use external variable to dictate the position of dependent point
-        const distance = constraint.distance;
-        const id = "S" + `_{${independantID}${dependentID}}`; //S stands for displacement/distance
-
-        const dependentPoint = points[dependentID];
-        if (constraint.relationship == "v") {
-            dependentPoint.x = `${independantID}_{x}`;
-            if (distance != undefined) {
-                dependentPoint.y = `${independantID}_{y} + ${id}`
-            }
-        }
-        else if (constraint.relationship == "h") {
-            dependentPoint.y = `${independantID}_{y}`;
-            if (distance != undefined) {
-                dependentPoint.x = `${independantID}_{x} + ${id}`
-            }
-        }
-
-        if (distance != undefined) {
-            const externalVariable: Desmos.ExpressionState = { id: id, latex: `${id} = ${distance!}`};
-            externalVariables.push(externalVariable);
-        }
-    }
-
-    //line constraint: either lock points with y-coordiante or x-coorindate, will need to make a judgment later, then just replace the points_x/y with the line equation with their x/y counterpart substituted in
-    for (const constraint of lineConstraints) {
-        const dependent = constraint.constraintType;
-        const point = points[constraint.pointID];
-        const line = lines[constraint.lineID];
-        const [px, py] = [constraint.pointID + "_{x}", constraint.pointID + "_{y}"];
-
-        //need to rearrange equation for x or y
-        const [a, b, c] = [line.a, line.b, line.c];
-        if (dependent == "x") {
-            const newEquation = `(-${c} - ${b}${py})/${a}`
-            point.x = newEquation;
-        }
-        if (dependent == "y") {
-            const newEquation = `(-${c} - ${a}${px})/${b}`
-            point.y = newEquation;
-        }
-    }
-
-
-    //points: generate 2 variables for each point, point_x and point_y
-    for (const id in points) {
-        const point = points[id];
-        const x = point.x ? point.x : 0;
-        const y = point.y ? point.y : 0;
-
-        const pX: Desmos.ExpressionState = { id: `${id}_{x}`, latex: `${id}_{x} = ${x}` };
-        const pY: Desmos.ExpressionState = { id: `${id}_{y}`, latex: `${id}_{y} = ${y}` };
-        const p: Desmos.ExpressionState = { id: id, latex: `${id} = (${id}_{x}, ${id}_{y})`, label: id, showLabel: true };
-        pointExpressions.push(p, pX, pY);
-    }
-
-    //also need to check if some points are 'over-constrained'
-    //e.g. a point has 2 variables of freedom (x and y), so if there are more than 2 constraints acting on it then it is 'over-constrained'
-    //constraints on points include: point constraints (constrain v or h to a point), point constraints (distance), line constraints, 
-    //a shape formation may also be 'over-constrained', e.g. a circle trying to be defined with 3 points and a tangent
-
-    //This can be checked using the dependency graph
-    const dependencyGraph: { [id: string] : string[] } = {}; //DEPENDANCY_GRAPH[id] returns a list of all objects id is dependent on
-    UpdateDependencyGraph(dependencyGraph, points, lines, shapes, pointConstraints, lineConstraints);
-    //Check if a point has more than 2 dependencies and if a circle has more than 3 constraints (may be some edge cases)
-
-    let expressions: Desmos.ExpressionState[] = [];
-    expressions = expressions.concat(externalVariables);
-    expressions = expressions.concat(pointExpressions);
-    expressions = expressions.concat(lineExpressions);
-    expressions = expressions.concat(shapeExpressions);
-    
-    console.log(expressions);
-    return expressions;
-}
-
 
 
 
@@ -414,13 +94,7 @@ const Main = () => {
         }
     }
 
-    //Formats:
-    //Point: a
-    //Point constraint: - (when no distance) or S_{independent}{dependent}, e.g. S_{ab}
-    //Line: AB (alphabetical order) ot just A is defined with gradient
-    //Line Constraint: - (array not dictionary)
-    //Shape: A
-
+    /*
     POINTS["a"] = Point(0, 10);
     POINTS["b"] = Point(10, 0);
 
@@ -448,6 +122,10 @@ const Main = () => {
     SHAPES["E"] = Shape("circle", ["b"], [], [5]);
     SHAPES["F"] = Shape("circle", ["h", "l"], [], ["center+point"]);
 
+    LINES["A"] = Line("h", "", "5");
+    */
+
+    POINTS["a"] = Point(0, 10);
     LINES["A"] = Line("a", "", "5");
 
     //In future may also want to switch RenderScene() function from using reference values to deep copied values
@@ -463,9 +141,10 @@ Main();
 //Implment polygons (more than just 4 sides)
 
 //Remove ids from objects (don't need as they are stored with id in dictionary)
-//New line construction: Line with point and gradient (∆y and ∆x) - implemented, but seems quite buggy
-//New line constraint: Place point in a ratio on a line from point a -> b
+//New line construction: Line with point and gradient (∆y and ∆x) - implementeted
 //New line constraint: Constrain point to circle
-//Also need to add ability to calculate areas to actually solve the problems
 
 //MOST IMPORTANTLY - NEED UI
+
+//New line constraint: Place point in a ratio on a line from point a -> b
+//Also need to add ability to calculate areas to actually solve the problems
