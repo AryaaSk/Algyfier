@@ -2,24 +2,8 @@
 let POINTS = {};
 let LINES = {};
 let SHAPES = {};
-//Conventions
-//Point: a
-//Point constraint: - (when no distance) or S_{independent}{dependent}, e.g. S_{ab}
-//Line: AB (alphabetical order) ot just A if defined with gradient
-//Line Constraint: - (array not dictionary)
-//Shape: A
 let POINT_CONTRAINTS = [];
 let LINE_CONSTRAINTS = [];
-const RecomputeLine = (line) => {
-    const [x1, y1] = [`${line.point1ID}_{x}`, `${line.point1ID}_{y}`];
-    const [x2, y2] = [`${line.point2ID}_{x}`, `${line.point2ID}_{y}`]; //if gradient is used to construct line, then this will be updated before the line is drawn
-    const a = `(${y1} - ${y2})`;
-    const b = `(${x2} - ${x1})`;
-    const c = `(${x1}${y2} - ${x2}${y1})`;
-    const equation = `${a}x + ${b}y + ${c} = 0`;
-    [line.a, line.b, line.c] = [a, b, c];
-    line.equation = equation;
-};
 //NEED TO IMPLEMENT A SYSTEM WHERE USER CAN DRAG POINTS ON DESMOS, WHICH WILL UPDATE THEIR X AND Y VALUES ACCORDINGLY
 //However should only update points which have independent x/y values, e.g. not points' x/y value which is controlled by a line
 //This should be called everytime the user is about to make 'overriding changes', e.g. clicking 'update model' from UI
@@ -90,6 +74,7 @@ const Main = () => {
     POINTS["j"] = Point(0, 0);
     POINTS["k"] = Point(0, 0);
     POINTS["l"] = Point(0, 0);
+
     SHAPES["A"] = Shape("rectangle", ["h", "j", "k", "l"], [], [3, 3]);
 
     //Circles
@@ -99,10 +84,12 @@ const Main = () => {
     SHAPES["E"] = Shape("circle", ["b"], [], [5]);
     SHAPES["F"] = Shape("circle", ["h", "l"], [], ["center+point"]);
 
-    LINES["A"] = Line("h", "", "5");
+    LINES["A_"] = Line("h", "", "5");
     */
-    POINTS["a"] = Point(0, 10);
-    LINES["A"] = Line("a", "", "5");
+    POINTS["a"] = Point(0, 0);
+    POINTS["b"] = Point(-5, 10);
+    LINES["A_"] = Line("a", "", "5");
+    SHAPES["A"] = Shape('circle', ["a", "b"], ["A_"], []);
     //In future may also want to switch RenderScene() function from using reference values to deep copied values
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
     UpdateCalculator(expressions);
@@ -115,7 +102,7 @@ Main();
 //Implment polygons (more than just 4 sides)
 //Remove ids from objects (don't need as they are stored with id in dictionary)
 //New line construction: Line with point and gradient (∆y and ∆x) - implementeted
-//New line constraint: Constrain point to circle
+//New line constraint: Constrain point to circle -> Cannot implement this as it goes against the original idea of dependency: points -> lines -> shapes (excludes squares/rectangles since those are simply more point constraints)
 //MOST IMPORTANTLY - NEED UI
 //New line constraint: Place point in a ratio on a line from point a -> b
 //Also need to add ability to calculate areas to actually solve the problems
