@@ -32,8 +32,9 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
             RecomputeLine(line);
         }
     }
+    //From here on we just treat lines constructed with gradients as if they were constructed with 2 points instead
 
-    //shape: for rectangle, will need to consider this as a point constraint
+    //shape: for rectangle, will need to consider this as point constraints
     //       for circle, simply use information given an construct using points and/or line equations already calculated
     for (const id in shapes) {
         const shape = shapes[id];
@@ -60,7 +61,6 @@ const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : L
                 const p2 = lineID[1].toLowerCase();
                 lines[lineID] = Line(p1, p2);
             }
-            console.log(lines);
         }
 
         else if (shape.type == "circle") {
