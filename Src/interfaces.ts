@@ -47,8 +47,8 @@ interface Shape {
 const Point = (x: number | string, y: number | string): Point => {
     return { x: x, y: y  };
 }
-const PointConstraint = (point1ID: string, point2ID: string, relationship: "v" | "h", distance?: number): PointConstraint => {
-    return { point1ID: point1ID, point2ID: point2ID, relationship: relationship, distance: distance };
+const PointConstraint = (dependantPointID: string, independentPointID: string, relationship: "v" | "h", distance?: number): PointConstraint => {
+    return { point1ID: dependantPointID, point2ID: independentPointID, relationship: relationship, distance: distance };
 }
 const Line = (point1ID: string, point2ID: string, gradient?: string): Line => {
     const line = { point1ID: point1ID, point2ID: point2ID, gradient: gradient, a: "", b: "", c: "", equation: "" };

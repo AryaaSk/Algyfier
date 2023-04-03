@@ -2,8 +2,8 @@
 const Point = (x, y) => {
     return { x: x, y: y };
 };
-const PointConstraint = (point1ID, point2ID, relationship, distance) => {
-    return { point1ID: point1ID, point2ID: point2ID, relationship: relationship, distance: distance };
+const PointConstraint = (dependantPointID, independentPointID, relationship, distance) => {
+    return { point1ID: dependantPointID, point2ID: independentPointID, relationship: relationship, distance: distance };
 };
 const Line = (point1ID, point2ID, gradient) => {
     const line = { point1ID: point1ID, point2ID: point2ID, gradient: gradient, a: "", b: "", c: "", equation: "" };
