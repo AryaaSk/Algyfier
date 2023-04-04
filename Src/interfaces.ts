@@ -68,6 +68,7 @@ const Shape = (type: "circle" | "rectangle", pointIDs: string[], lineIDs: string
 //Line: AB (alphabetical order) ot just A_ if you use a gradient (will generate another point with id as 'A')
 //Line Constraint: - (array not dictionary)
 //Shape: A (id doesn't matter if it is a polygon, if it is a circle then it will appear as "C_{A}")
+//I had to use altered IDs for the shapes when outputting due to the newly formed point when creating a line with a gradient (the point is just the capital of p1, so it would interfere with the original shape ID)
 
 //Shape definitions
 //Square/Rectangle: pointIDs: [independent (bottom left), bottom right, top right, top left], data: [height, width]

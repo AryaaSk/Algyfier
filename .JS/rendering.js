@@ -5,7 +5,14 @@
 //3. Point constraints: Rewrites dependent point in terms of independent point, and also adds external variables if a length is involved
 //4. Line constraints: Points' x or y value is rewritten in terms of a line
 //5. Points: Simply plots points using x and y values given/generated previously
-const RenderScene = (points, lines, shapes, pointConstraints, lineConstraints) => {
+const RenderScene = (ps, ls, ss, pCs, lCs) => {
+    const [points, lines, shapes, pointConstraints, lineConstraints] = [
+        JSON.parse(JSON.stringify(ps)),
+        JSON.parse(JSON.stringify(ls)),
+        JSON.parse(JSON.stringify(ss)),
+        JSON.parse(JSON.stringify(pCs)),
+        JSON.parse(JSON.stringify(lCs))
+    ];
     const pointExpressions = [];
     const lineExpressions = [];
     const externalVariables = [];

@@ -9,28 +9,48 @@
     <script src="/.JS/interfaces.js"></script>
     <script src="/.JS/rendering.js"></script>
     <script src="/.JS/script.js" defer></script>
+    <script src="/.JS/UI.js" defer></script>
 
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="main">
         <div id="constraintsWrapper">
+            <button id="construct" style="grid-column: 1 / 3;"> Construct </button>
+
             <div>
-                <div id="points" class="collectionView"></div>
+                <div id="points" class="collectionView">
+                    <div class="cell"> A </div>
+                </div>
             </div>
+
             <div>
-                <div id="pointContstraints" class="collectionView list"></div>
+                <div id="pointContstraints" class="collectionView list">
+                    <div class="row">
+                        (a) is horizontal to (b) with distance 5
+                    </div>
+                </div>
             </div>
+
             <div>
                 <div id="lines" class="collectionView"></div>
             </div>
+
             <div>
-                <div id="lineConstraints" class="collectionView list"></div>
+                <div id="lineConstraints" class="collectionView list">
+                </div>
             </div>
-            <div id="shapes" style="grid-column: 1 / 3;">
-                <div id="shapes" class="collectionView"></div>
+
+            <div style="grid-column: 1 / 3;">
+                <div id="shapes" class="collectionView list">
+                    <div class="shapeRow">
+                        <div>A</div>
+                        <div>Center: a, Radius: 5</div>
+                    </div>
+                </div>
             </div>
         </div>
+
         <div id="calculatorWrapper">
             <div id="calculator" style="height: 99%; width: 99%;"></div>
         </div>

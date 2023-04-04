@@ -33,6 +33,8 @@ const UpdatePoints = () => {
     }
 
     console.log(POINTS);
+
+    //Also need to get gradient data and update on the corresponding line generated with a gradient
 }
 
 
@@ -76,7 +78,6 @@ const Main = () => {
         }
     }
 
-    /*
     POINTS["a"] = Point(0, 10);
     POINTS["b"] = Point(10, 0);
 
@@ -105,8 +106,9 @@ const Main = () => {
     SHAPES["E"] = Shape("circle", ["b"], [], [5]);
     SHAPES["F"] = Shape("circle", ["h", "l"], [], ["center+point"]);
 
-    LINES["A_"] = Line("h", "", "5");
-    */
+    LINES["A_"] = Line("a", "", "5");
+    POINTS["f"] = Point(5, "");
+    LINE_CONSTRAINTS.push(LineConstraint("A_", "f", "y"));
 
     /*
     //Testing line constructed with point + gradient, to check if it interferes with a shape with the same ID
@@ -120,6 +122,7 @@ const Main = () => {
     LINE_CONSTRAINTS.push(LineConstraint("A_", "c", "y"));
     */
 
+    /*
     POINTS["a"] = Point(-2, 0);
     POINTS["b"] = Point("", "");
     POINT_CONTRAINTS.push(PointConstraint("b", "a", "h", 6));
@@ -133,6 +136,7 @@ const Main = () => {
 
     LINES["AD"] = Line("a", "d");
     LINES["BD"] = Line("b", "d");
+    */
 
     //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
 

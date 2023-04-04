@@ -5,7 +5,21 @@
 //4. Line constraints: Points' x or y value is rewritten in terms of a line
 //5. Points: Simply plots points using x and y values given/generated previously
 
-const RenderScene = (points: { [id: string] : Point }, lines: { [id: string] : Line }, shapes: { [id: string] : Shape }, pointConstraints: PointConstraint[], lineConstraints: LineConstraint[]) => {
+const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, ss: { [id: string] : Shape }, pCs: PointConstraint[], lCs: LineConstraint[]) => {
+    const [
+        points,
+        lines,
+        shapes,
+        pointConstraints,
+        lineConstraints
+    ] = [
+        JSON.parse(JSON.stringify(ps)),
+        JSON.parse(JSON.stringify(ls)),
+        JSON.parse(JSON.stringify(ss)),
+        JSON.parse(JSON.stringify(pCs)),
+        JSON.parse(JSON.stringify(lCs))
+    ];
+
     const pointExpressions: Desmos.ExpressionState[] = [];
     const lineExpressions: Desmos.ExpressionState[] = [];
     const externalVariables: Desmos.ExpressionState[] = [];

@@ -27,6 +27,7 @@ const UpdatePoints = () => {
         }
     }
     console.log(POINTS);
+    //Also need to get gradient data and update on the corresponding line generated with a gradient
 };
 let CALCULATOR;
 const InitCalculator = (element, options) => {
@@ -55,37 +56,30 @@ const Main = () => {
             UpdatePoints();
         }
     };
-    /*
     POINTS["a"] = Point(0, 10);
     POINTS["b"] = Point(10, 0);
-
     LINES["AB"] = Line("a", "b");
-
     POINTS["c"] = Point(5, "");
     LINE_CONSTRAINTS.push(LineConstraint("AB", "c", "y"));
-
     POINTS["d"] = Point("", "");
     POINT_CONTRAINTS.push(PointConstraint("d", "a", "h")); //inconsistencies arise when you try and supply too many constraints, e.g. a H and V to 2 points, but then also a distance from one point
     POINT_CONTRAINTS.push(PointConstraint("d", "b", "v"));
-
     //Square
     //Values given in Point() construction will be overwritten by constraints anyway
     POINTS["h"] = Point(0, 0);
     POINTS["j"] = Point(0, 0);
     POINTS["k"] = Point(0, 0);
     POINTS["l"] = Point(0, 0);
-
     SHAPES["A"] = Shape("rectangle", ["h", "j", "k", "l"], [], [3, 3]);
-
     //Circles
     SHAPES["B"] = Shape("circle", ["b", "c", "d"], [], []);
     SHAPES["C"] = Shape("circle", ["k", "a"], ["JK"], []);
     SHAPES["D"] = Shape("circle", ["a", "h"], [], []);
     SHAPES["E"] = Shape("circle", ["b"], [], [5]);
     SHAPES["F"] = Shape("circle", ["h", "l"], [], ["center+point"]);
-
-    LINES["A_"] = Line("h", "", "5");
-    */
+    LINES["A_"] = Line("a", "", "5");
+    POINTS["f"] = Point(5, "");
+    LINE_CONSTRAINTS.push(LineConstraint("A_", "f", "y"));
     /*
     //Testing line constructed with point + gradient, to check if it interferes with a shape with the same ID
     POINTS["a"] = Point(0, 0);
@@ -97,16 +91,21 @@ const Main = () => {
     POINTS["c"] = Point(5, "");
     LINE_CONSTRAINTS.push(LineConstraint("A_", "c", "y"));
     */
+    /*
     POINTS["a"] = Point(-2, 0);
     POINTS["b"] = Point("", "");
     POINT_CONTRAINTS.push(PointConstraint("b", "a", "h", 6));
     LINES["AB"] = Line("a", "b");
+
     POINTS["c"] = Point(0, "");
     LINE_CONSTRAINTS.push(LineConstraint("AB", "c", "y"));
+
     POINTS["d"] = Point("", "");
     POINT_CONTRAINTS.push(PointConstraint("d", "c", "v", 2));
+
     LINES["AD"] = Line("a", "d");
     LINES["BD"] = Line("b", "d");
+    */
     //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
     //In future may also want to switch RenderScene() function from using reference values to deep copied values
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
