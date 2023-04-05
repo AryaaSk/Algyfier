@@ -59,9 +59,48 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
         const shape = shapes[id];
 
         //could customise identifier as it is not the same as id, e.g. circles get changed to
-        let message = "This is a shape";
+        let message = "";
         
         //change message depending on what type of shape it is
+        if (shape.type == "rectangle") {
+            const [p1, p2, p3, p4] = shape.pointIDs;
+            const [height, width] = shape.data;
+            message = `Rectangle <br> (${p2}), (${p3}), (${p4}) dependent on (${p1}) <br> Height: ${height}, Width: ${width}`;
+        }
+        else if (shape.type == "circle") {
+            //Circle [3 points]: pointIDs: [p1, p2, p3]
+            //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
+            //Circle [2 points which are diameter]: pointIDs: [p1, p2]
+            //Circle [center and radius]: pointIDs: [C], data: [r]
+            //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"]
+
+            //A little messy but seems to handle all the above cases
+            const p1 = shape.pointIDs[0];
+            const independentPoints = shape.pointIDs.map((v) => { return `(${v})` }).join(", ");
+            const independentLines = shape.lineIDs.join(", ");
+
+            message = `Circle <br> Dependent on ${independentPoints}`
+
+            if (independentLines.length > 0) { //the only construction involving a line is tangent
+                message += `<br> Tangent at (${p1}) with ${independentLines}`;
+            }
+
+            if (shape.pointIDs.length == 2 && shape.lineIDs.length == 0 && shape.data.length == 0) { //diameter
+                message += "<br> [Diameter]"
+            }
+
+            const data = shape.data;
+            if (data.length == 1) { //everything that includes data doesn't have any lines
+                if (isNaN(Number(data[0]))) {
+                    //center + point
+                    message += "<br> [Center + Point]"
+                }
+                else {
+                    const radius = data[0];
+                    message = `Circle <br> Dependent on Center (${p1}) <br> Radius ${radius}`
+                }
+            }
+        }
 
         const element = document.createElement("div");
         element.className = "shapeRow";
@@ -73,10 +112,57 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
     }
 }
 
+const UpdateDataFromCalculator = () => {
+    //reads data from calculator, and updates x and y values of points
+    const data = CALCULATOR.getExpressions();
+    for (const expression of data) {
+        const id = expression.id!;
+        const point = POINTS[id];
+        if (point != undefined) {
+            //we know the id from desmos is definetly a point, get x and y value of point from desmos
+            //however we only want to alter points' x/y value if it is independent, which will be clear by checking whether the x or y value of the point is a number or string
+            if (isNaN(<any>(point.x))) {
+                const desmosX = Number((<any>CALCULATOR.expressionAnalysis[id + "_{x}"]).evaluation.value);
+                point.x = desmosX;
+            }
+            if ((isNaN(<any>(point.y)))) {
+                const desmosY = Number((<any>CALCULATOR.expressionAnalysis[id + "_{y}"]).evaluation.value);
+                point.y = desmosY
+            }
+        }
+    }
+
+    console.log(POINTS);
+
+    //Also need to get gradient data and update on the corresponding line generated with a gradient
+    //Gather shape data, e.g. if rectangle height and width have been altered, or if circle's radius has been altered
+}
+
+
+
+
+
+const AttachListeners = () => {
+    const bind = document.getElementById("bind")!;
+    bind.onclick = () => {
+        UpdateDataFromCalculator();
+        PopulateDivs(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
+    }
+
+    const construct = document.getElementById("construct")!;
+    construct.onclick = () => {
+        const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
+        UpdateCalculator(expressions);
+    }
+}
+
+
 
 
 
 const MainUI = () => {
     PopulateDivs(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
+    const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
+    UpdateCalculator(expressions);
 }
 MainUI();

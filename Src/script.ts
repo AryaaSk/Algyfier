@@ -5,42 +5,6 @@ let SHAPES: { [id: string] : Shape } = {};
 let POINT_CONTRAINTS: PointConstraint[] = [];
 let LINE_CONSTRAINTS: LineConstraint[] = [];
 
-
-
-
-
-//NEED TO IMPLEMENT A SYSTEM WHERE USER CAN DRAG POINTS ON DESMOS, WHICH WILL UPDATE THEIR X AND Y VALUES ACCORDINGLY
-//However should only update points which have independent x/y values, e.g. not points' x/y value which is controlled by a line
-//This should be called everytime the user is about to make 'overriding changes', e.g. clicking 'update model' from UI
-const UpdatePoints = () => {
-    //reads data from calculator, and updates x and y values of points
-    const data = CALCULATOR.getExpressions();
-    for (const expression of data) {
-        const id = expression.id!;
-        const point = POINTS[id];
-        if (point != undefined) {
-            //we know the id from desmos is definetly a point, get x and y value of point from desmos
-            //however we only want to alter points' x/y value if it is independent, which will be clear by checking whether the x or y value of the point is a number or string
-            if (isNaN(<any>(point.x))) {
-                const desmosX = Number((<any>CALCULATOR.expressionAnalysis[id + "_{x}"]).evaluation.value);
-                point.x = desmosX;
-            }
-            if ((isNaN(<any>(point.y)))) {
-                const desmosY = Number((<any>CALCULATOR.expressionAnalysis[id + "_{y}"]).evaluation.value);
-                point.y = desmosY
-            }
-        }
-    }
-
-    console.log(POINTS);
-
-    //Also need to get gradient data and update on the corresponding line generated with a gradient
-}
-
-
-
-
-
 let CALCULATOR: Desmos.Calculator;
 
 const InitCalculator = (element: HTMLElement, options: { [k : string] : boolean }) => {
@@ -56,10 +20,6 @@ const UpdateCalculator = (expressions: Desmos.ExpressionState[]) => {
     CALCULATOR.setExpressions(expressions); //add new ones
 }
 
-
-
-
-
 const Main = () => {
     const options = {
         expressionsCollapsed: true,
@@ -70,13 +30,6 @@ const Main = () => {
 
     const calculatorElement = document.getElementById("calculator")!;
     CALCULATOR = InitCalculator(calculatorElement, options);
-
-    document.onkeydown = ($e) => {
-        const key = $e.key.toLowerCase();
-        if (key == " ") {
-            UpdatePoints();
-        }
-    }
 
     POINTS["a"] = Point(0, 10);
     POINTS["b"] = Point(10, 0);
@@ -139,10 +92,6 @@ const Main = () => {
     */
 
     //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
-
-    //In future may also want to switch RenderScene() function from using reference values to deep copied values
-    const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
-    UpdateCalculator(expressions);
 }
 Main();
 

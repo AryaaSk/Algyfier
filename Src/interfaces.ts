@@ -40,7 +40,7 @@ interface Shape {
     //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
     //Circle [2 points which are diameter]: pointIDs: [p1, p2]
     //Circle [center and radius]: pointIDs: [C], data: [r]
-    //Circle [center and point]: pointIDs: [C, p1]
+    //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"]
     //Circle [center and tangent] (having got formula yet)
 }
 
