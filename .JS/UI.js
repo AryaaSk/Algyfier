@@ -97,11 +97,11 @@ const UpdateDataFromCalculator = () => {
         if (point != undefined) {
             //we know the id from desmos is definetly a point, get x and y value of point from desmos
             //however we only want to alter points' x/y value if it is independent, which will be clear by checking whether the x or y value of the point is a number or string
-            if (isNaN((point.x))) {
+            if (!isNaN((point.x))) {
                 const desmosX = Number(CALCULATOR.expressionAnalysis[id + "_{x}"].evaluation.value);
                 point.x = desmosX;
             }
-            if ((isNaN((point.y)))) {
+            if (!isNaN((point.y))) {
                 const desmosY = Number(CALCULATOR.expressionAnalysis[id + "_{y}"].evaluation.value);
                 point.y = desmosY;
             }
@@ -125,6 +125,7 @@ const AttachListeners = () => {
 };
 const MainUI = () => {
     PopulateDivs(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
+    AttachListeners();
     const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
     UpdateCalculator(expressions);
 };
