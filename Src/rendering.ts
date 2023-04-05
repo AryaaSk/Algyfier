@@ -1,8 +1,8 @@
 //Uses specific order to map points and constraints to desmos:
 //1. Shapes: Mainly generates points with constraints, and then lines, or just creates the shape implicitally using pre-existing points
 //2. Lines: Checking if gradient is present, if so then p2 is overwritten with a point mimicing the gradient, and an external variable is generated to modify this gradient
-//3. Point constraints: Rewrites dependent point in terms of independent point, and also adds external variables if a length is involved
-//4. Line constraints: Points' x or y value is rewritten in terms of a line
+//3. Point Constraints: Rewrites dependent point in terms of independent point, and also adds external variables if a length is involved
+//4. Line Constraints: Points' x or y value is rewritten in terms of a line
 //5. Points: Simply plots points using x and y values given/generated previously
 
 const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, ss: { [id: string] : Shape }, pCs: PointConstraint[], lCs: LineConstraint[]) => {
@@ -25,7 +25,6 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
     const externalVariables: Desmos.ExpressionState[] = [];
     const shapeExpressions: Desmos.ExpressionState[] = [];
     //before rendering scene, we need to make sure all constraints are in place
-    //Since I am directly modifying the points dictionary, this may cause some reference value issues, however as long as the constraints are correct, then it is 'controlled-overwriting'
     //CONSTRAINTS OVERWRITE DIRECT VALUES/EQUATIONS
 
     //lines - check if it is constructed with gradient - if so then convert gradient into 2nd point
@@ -55,7 +54,6 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
         
         if (shape.type == "rectangle") {
             //Treat like point constraints: external variable for sideLength, then make all points dependent on independent point (bottom-left)
-            //Just add some point constraints
             const [height, width] = shape.data;
             const [bl, br, tr, tl] = shape.pointIDs;
             pointConstraints.push(PointConstraint(br, bl, "h", <number>width));
@@ -91,7 +89,6 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
                 Cy = `\\frac{${p1}_{x}^{2}\\left(${p2}_{x}-${p3}_{x}\\right)+${p1}_{x}\\left(-${p2}_{x}^{2}-${p2}_{y}^{2}+${p3}_{x}^{2}+${p3}_{y}^{2}\\right)+${p1}_{y}^{2}\\left(${p2}_{x}-${p3}_{x}\\right)+${p3}_{x}\\left(${p2}_{x}^{2}-${p2}_{x}${p3}_{x}+${p2}_{y}^{2}\\right)-${p2}_{x}${p3}_{y}^{2}}{2\\left(${p1}_{x}\\left(${p3}_{y}-${p2}_{y}\\right)+${p1}_{y}\\left(${p2}_{x}-${p3}_{x}\\right)-${p2}_{x}${p3}_{y}+${p2}_{y}${p3}_{x}\\right)}`;
                 Cr = `\\sqrt{\\left(${p1}_{x}-${CxID}\\right)^{2}+\\left(${p1}_{y}-${CyID}\\right)^{2}}`;
             }
-
             //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
             else if (shape.pointIDs.length == 2 && shape.lineIDs.length == 1) {
                 const [p1, p2] = shape.pointIDs;
@@ -102,7 +99,6 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
                 Cy = `\\left\\{${b}=0:\\ ${p1}_{y},\\ \\frac{\\left(\\frac{${p1}_{x}^{2}+${p1}_{y}^{2}-${p2}_{x}^{2}-${p2}_{y}^{2}}{2${p1}_{x}-2${p2}_{x}}-\\frac{${b}${p1}_{x}-${a}${p1}_{y}}{${b}}\\right)}{\\left(\\frac{${a}}{${b}}+\\frac{2${p1}_{y}-2${p2}_{y}}{2${p1}_{x}-2${p2}_{x}}\\right)}\\right\\}`;
                 Cr = `\\sqrt{\\left(${p1}_{x}-${CxID}\\right)^{2}+\\left(${p1}_{y}-${CyID}\\right)^{2}}`;
             }
-
             //Circle [2 points which are diameter]: pointIDs: [p1, p2]
             else if (shape.pointIDs.length == 2 && shape.data.length == 0) {
                 const [p1, p2] = shape.pointIDs;
@@ -110,7 +106,6 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
                 Cy = `\\frac{${p1}_{y}+${p2}_{y}}{2}`;
                 Cr = `\\frac{1}{2}\\sqrt{\\left(${p1}_{x}-${p2}_{x}\\right)^{2}+\\left(${p1}_{y}-${p2}_{y}\\right)^{2}}`
             }
-
             //Circle [center and radius]: pointIDs: [C], data: [r]
             else if (shape.pointIDs.length == 1 && shape.data.length == 1) {
                 const point = shape.pointIDs[0];
@@ -124,7 +119,6 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
                 const externalVariable: Desmos.ExpressionState = { id: radiusVariableID, latex: `${radiusVariableID} = ${radius}`};
                 externalVariables.push(externalVariable);
             }
-
             //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"] //to differentiate from the diameter construction
             else if (shape.pointIDs.length == 2 && shape.data[0] == "center+point") {
                 const [center, point] = shape.pointIDs;
@@ -144,6 +138,7 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
         }
     }
 
+    //Display lines simply using equation
     for (const id in lines) {
         const line = lines[id];
         const equation = line.equation;
@@ -198,7 +193,6 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
             point.y = newEquation;
         }
     }
-
 
     //points: generate 2 variables for each point, point_x and point_y
     for (const id in points) {
