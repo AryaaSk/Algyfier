@@ -25,7 +25,8 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
     for (const pointConstraint of pointConstraints) {
         const element = document.createElement("div");
         element.className = "row";
-        let message = `(${pointConstraint.point1ID}) is horizontal to (${pointConstraint.point2ID})`;
+        const constraintType = pointConstraint.relationship == "h" ? "horizontal" : "vertical";
+        let message = `(${pointConstraint.point1ID}) is ${constraintType} to (${pointConstraint.point2ID})`;
         if (pointConstraint.distance != undefined) {
             message += ` with distance ${pointConstraint.distance}`;
         }

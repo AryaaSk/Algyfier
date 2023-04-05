@@ -18,7 +18,8 @@ const PopulateDivs = (points, lines, shapes, pointConstraints, lineConstraints) 
     for (const pointConstraint of pointConstraints) {
         const element = document.createElement("div");
         element.className = "row";
-        let message = `(${pointConstraint.point1ID}) is horizontal to (${pointConstraint.point2ID})`;
+        const constraintType = pointConstraint.relationship == "h" ? "horizontal" : "vertical";
+        let message = `(${pointConstraint.point1ID}) is ${constraintType} to (${pointConstraint.point2ID})`;
         if (pointConstraint.distance != undefined) {
             message += ` with distance ${pointConstraint.distance}`;
         }
@@ -43,9 +44,7 @@ const PopulateDivs = (points, lines, shapes, pointConstraints, lineConstraints) 
     SHAPES_DIV.innerHTML = ``;
     for (const id in shapes) {
         const shape = shapes[id];
-        //could customise identifier as it is not the same as id, e.g. circles get changed to
         let message = "";
-        //change message depending on what type of shape it is
         if (shape.type == "rectangle") {
             const [p1, p2, p3, p4] = shape.pointIDs;
             const [height, width] = shape.data;
@@ -57,21 +56,23 @@ const PopulateDivs = (points, lines, shapes, pointConstraints, lineConstraints) 
             //Circle [2 points which are diameter]: pointIDs: [p1, p2]
             //Circle [center and radius]: pointIDs: [C], data: [r]
             //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"]
-            //A little messy but seems to handle all the above cases
             const p1 = shape.pointIDs[0];
             const independentPoints = shape.pointIDs.map((v) => { return `(${v})`; }).join(", ");
             const independentLines = shape.lineIDs.join(", ");
+            //A little messy but seems to handle all the above cases, uses base and then adds extra information
             message = `Circle <br> Dependent on ${independentPoints}`;
-            if (independentLines.length > 0) { //the only construction involving a line is tangent
+            //the only construction involving a line is tangent
+            if (independentLines.length > 0) {
                 message += `<br> Tangent at (${p1}) with ${independentLines}`;
             }
-            if (shape.pointIDs.length == 2 && shape.lineIDs.length == 0 && shape.data.length == 0) { //diameter
+            //diameter
+            if (shape.pointIDs.length == 2 && shape.lineIDs.length == 0 && shape.data.length == 0) {
                 message += "<br> [Diameter]";
             }
+            //Handling data case
             const data = shape.data;
-            if (data.length == 1) { //everything that includes data doesn't have any lines
+            if (data.length == 1) {
                 if (isNaN(Number(data[0]))) {
-                    //center + point
                     message += "<br> [Center + Point]";
                 }
                 else {

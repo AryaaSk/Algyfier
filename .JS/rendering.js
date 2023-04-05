@@ -2,8 +2,8 @@
 //Uses specific order to map points and constraints to desmos:
 //1. Shapes: Mainly generates points with constraints, and then lines, or just creates the shape implicitally using pre-existing points
 //2. Lines: Checking if gradient is present, if so then p2 is overwritten with a point mimicing the gradient, and an external variable is generated to modify this gradient
-//3. Point constraints: Rewrites dependent point in terms of independent point, and also adds external variables if a length is involved
-//4. Line constraints: Points' x or y value is rewritten in terms of a line
+//3. Point Constraints: Rewrites dependent point in terms of independent point, and also adds external variables if a length is involved
+//4. Line Constraints: Points' x or y value is rewritten in terms of a line
 //5. Points: Simply plots points using x and y values given/generated previously
 const RenderScene = (ps, ls, ss, pCs, lCs) => {
     const [points, lines, shapes, pointConstraints, lineConstraints] = [
@@ -18,7 +18,6 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
     const externalVariables = [];
     const shapeExpressions = [];
     //before rendering scene, we need to make sure all constraints are in place
-    //Since I am directly modifying the points dictionary, this may cause some reference value issues, however as long as the constraints are correct, then it is 'controlled-overwriting'
     //CONSTRAINTS OVERWRITE DIRECT VALUES/EQUATIONS
     //lines - check if it is constructed with gradient - if so then convert gradient into 2nd point
     for (const id in lines) {
@@ -43,7 +42,6 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
         const shape = shapes[id];
         if (shape.type == "rectangle") {
             //Treat like point constraints: external variable for sideLength, then make all points dependent on independent point (bottom-left)
-            //Just add some point constraints
             const [height, width] = shape.data;
             const [bl, br, tr, tl] = shape.pointIDs;
             pointConstraints.push(PointConstraint(br, bl, "h", width));
@@ -120,6 +118,7 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
             shapeExpressions.push(centerX, centerY, radius, equation);
         }
     }
+    //Display lines simply using equation
     for (const id in lines) {
         const line = lines[id];
         const equation = line.equation;
