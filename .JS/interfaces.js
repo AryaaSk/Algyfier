@@ -13,8 +13,8 @@ const Line = (point1ID, point2ID, gradient) => {
 const LineConstraint = (lineID, pointID, constraintType) => {
     return { lineID: lineID, pointID: pointID, constraintType: constraintType };
 };
-const Shape = (type, pointIDs, lineIDs, data) => {
-    return { type: type, pointIDs: pointIDs, lineIDs: lineIDs, data: data };
+const Shape = (type, pointIDs, lineIDs, data, construction) => {
+    return { type: type, pointIDs: pointIDs, lineIDs: lineIDs, data: data, construction: construction };
 };
 //ID conventions
 //Point: a
@@ -26,9 +26,9 @@ const Shape = (type, pointIDs, lineIDs, data) => {
 //Forbidden letters: 'e', 'x', 'y'
 //Shape definitions
 //Square/Rectangle: pointIDs: [independent (bottom left), bottom right, top right, top left], data: [height, width]
-//Circle [3 points]: pointIDs: [p1, p2, p3]
-//Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
-//Circle [2 points which are diameter]: pointIDs: [p1, p2]
-//Circle [center and radius]: pointIDs: [C], data: [r]
-//Circle [center and point]: pointIDs: [C, p1], data: ["center+point"]
-//Circle [center and tangent] (haven't got formula yet)
+//Circle [3 points] 3P: pointIDs: [p1, p2, p3]
+//Circle [2 points + tangent] 2P+T: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
+//Circle [2 points which are diameter] 2PD: pointIDs: [p1, p2]
+//Circle [center and radius] C+R: pointIDs: [C], data: [r]
+//Circle [center and point] C+P: pointIDs: [C, p1]
+//Circle [center and tangent] C+T (haven't got formula yet)

@@ -38,7 +38,16 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
     for (const id in lines) {
         const element = document.createElement("div");
         element.className = "cell";
-        element.innerHTML = id;
+
+        let message = "";
+        const line = lines[id];
+        if (line.gradient != undefined) {
+            message = `${line.point1ID.toUpperCase()}<u>${Math.round(line.gradient)}</u>`;
+        }
+        else {
+            message = id;
+        }
+        element.innerHTML = message;
         LINES_DIV.append(element);
     }
 
@@ -46,7 +55,7 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
     for (const lineConstraint of lineConstraints) {
         const element = document.createElement("div");
         element.className = "row";
-       const message = `(${lineConstraint.pointID}) is ${lineConstraint.constraintType}-constrained to line ${lineConstraint.lineID}`;
+        const message = `(${lineConstraint.pointID}) is ${lineConstraint.constraintType}-constrained to line ${lineConstraint.lineID}`;
         element.innerHTML = message
         LINE_CONSTRAINTS_DIV.append(element);
     }
@@ -59,7 +68,7 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
         if (shape.type == "rectangle") {
             const [p1, p2, p3, p4] = shape.pointIDs;
             const [height, width] = shape.data;
-            message = `Rectangle <br> (${p2}), (${p3}), (${p4}) dependent on (${p1}) <br> Height: ${height}, Width: ${width}`;
+            message = `Rectangle <br> (${p2}), (${p3}), (${p4}) dependent on (${p1}) <br> Height: ${Math.round(<number>height)}, Width: ${Math.round(<number>width)}`;
         }
         else if (shape.type == "circle") {
             //Circle [3 points]: pointIDs: [p1, p2, p3]
@@ -71,28 +80,24 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
             const p1 = shape.pointIDs[0];
             const independentPoints = shape.pointIDs.map((v) => { return `(${v})` }).join(", ");
             const independentLines = shape.lineIDs.join(", ");
+            const data = shape.data;
+            const construction = shape.construction!;
 
             //A little messy but seems to handle all the above cases, uses base and then adds extra information
             message = `Circle <br> Dependent on ${independentPoints}`
 
-            //the only construction involving a line is tangent with 2 points
-            if (independentLines.length > 0) {
+            if (construction == "2P+T") {
                 message += `<br> Tangent at (${p1}) with ${independentLines}`;
             }
-            //diameter
-            if (shape.pointIDs.length == 2 && shape.lineIDs.length == 0 && shape.data.length == 0) {
+            else if (construction == "2PD") {
                 message += "<br> [Diameter]"
             }
-            //Handling data case
-            const data = shape.data;
-            if (data.length == 1) {
-                if (isNaN(Number(data[0]))) {
-                    message += "<br> [Center + Point]"
-                }
-                else {
-                    const radius = data[0];
-                    message = `Circle <br> Dependent on Center (${p1}) <br> Radius ${radius}`
-                }
+            else if (construction == "C+P") {
+                message += "<br> [Center + Point]"
+            }
+            else if (construction == "C+R") {
+                const radius = data[0];
+                message = `Circle <br> Dependent on Center (${p1}) <br> Radius: ${radius}`
             }
         }
 
@@ -129,15 +134,52 @@ const UpdateDataFromCalculator = () => {
             const newGradient = Number((<any>CALCULATOR.expressionAnalysis[id]).evaluation.value);
 
             const line = LINES[lineID];
-            line.gradient = String(newGradient);
+            line.gradient = newGradient;
         }
-        else if (id[0] == "S") { //point construct or could be part of a shape
-            const [independantID, depdendentID] = id.split("{")[1].split("}").join("").split("");
-        }
+        else if (id[0] == "S") { //point constraint
+            const [independantID, depdendentID] = id.split("{")[1].split("}").join("").toLowerCase().split("");
+            const newValue = Number((<any>CALCULATOR.expressionAnalysis[id]).evaluation.value);
 
+            //currently we don't know if this is a point constraint simply between 2 points or a shape
+            //check if this is a point constraint, if not then it must be a shape
+            let wasPointConstraint = false;
+            for (const pointConstraint of POINT_CONSTRAINTS) {
+                if (pointConstraint.point1ID == depdendentID && pointConstraint.point2ID == independantID) {
+                    pointConstraint.distance = newValue;
+                    wasPointConstraint = true;
+                }
+            }
+
+            //find the corresponding shape if it wasn't a point constraint
+            if (wasPointConstraint == false) {
+                for (const id in SHAPES) {
+                    const shape = SHAPES[id];
+                    if (shape.type == "rectangle") {
+                        const shapeIndependentPoint = shape.pointIDs[0];
+
+                        //could be the height or width, pointIds[1] will be width, pointIds[3] will be height
+                        const shapeWidthPoint = shape.pointIDs[1];
+                        const shapeHeightPoint = shape.pointIDs[3];
+
+                        //data[0] = height, data[1] = width 
+                        if (independantID == shapeIndependentPoint && depdendentID == shapeWidthPoint) {
+                            shape.data[1] = newValue;
+                        }
+                        else if (independantID == shapeIndependentPoint && depdendentID == shapeHeightPoint) {
+                            shape.data[0] = newValue;   
+                        }
+                    }
+                }
+            }
+        }
+        else if (id[0] == "C" && id.endsWith("r}")) {
+            const circleID = id.split("{")[1].split("r}").join("");
+            const circle = SHAPES[circleID];
+            
+            //circle's radius, now check if it's constructed with center + radius
+            //...
+        }
     }
-
-    //Gather shape data, e.g. if rectangle height and width have been altered, or if circle's radius has been altered
 }
 
 
@@ -148,13 +190,13 @@ const AttachListeners = () => {
     const bind = document.getElementById("bind")!;
     bind.onclick = () => {
         UpdateDataFromCalculator();
-        PopulateDivs(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
+        PopulateDivs(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
     }
 
     const construct = document.getElementById("construct")!;
     construct.onclick = () => {
-        const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
-        UpdateCalculator(expressions);
+        const [externalVariables, expressions] = RenderScene(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
+        UpdateCalculator(externalVariables, expressions);
     }
 }
 
@@ -163,10 +205,10 @@ const AttachListeners = () => {
 
 
 const MainUI = () => {
-    PopulateDivs(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
+    PopulateDivs(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
     AttachListeners();
 
-    const expressions = RenderScene(POINTS, LINES, SHAPES, POINT_CONTRAINTS, LINE_CONSTRAINTS);
-    UpdateCalculator(expressions);
+    const [externalVariables, expressions] = RenderScene(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
+    UpdateCalculator(externalVariables, expressions);
 }
 MainUI();

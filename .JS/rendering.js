@@ -65,17 +65,18 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
             let [Cx, Cy, Cr] = ["", "", ""];
             const circleID = `C_{${id}}`;
             const [CxID, CyID, CrID] = [`C_{${id}x}`, `C_{${id}y}`, `C_{${id}r}`];
+            const construction = shape.construction;
             //IDs: Cx -> id_{x}, etc...
             //Need to identify which type it is:
             //Circle [3 points]: pointIDs: [p1, p2, p3]
-            if (shape.pointIDs.length == 3) {
+            if (construction == "3P") {
                 const [p1, p2, p3] = shape.pointIDs;
                 Cx = `\\frac{\\left(${p1}_{x}^{2}-${p2}_{x}^{2}+${p1}_{y}^{2}-${p2}_{y}^{2}\\right)\\left(${p1}_{y}-${p3}_{y}\\right)-\\left(${p1}_{x}^{2}-${p3}_{x}^{2}+${p1}_{y}^{2}-${p3}_{y}^{2}\\right)\\left(${p1}_{y}-${p2}_{y}\\right)}{2\\left(\\left(${p3}_{x}-${p1}_{x}\\right)\\left(${p1}_{y}-${p2}_{y}\\right)-\\left(${p2}_{x}-${p1}_{x}\\right)\\left(${p1}_{y}-${p3}_{y}\\right)\\right)}`;
                 Cy = `\\frac{${p1}_{x}^{2}\\left(${p2}_{x}-${p3}_{x}\\right)+${p1}_{x}\\left(-${p2}_{x}^{2}-${p2}_{y}^{2}+${p3}_{x}^{2}+${p3}_{y}^{2}\\right)+${p1}_{y}^{2}\\left(${p2}_{x}-${p3}_{x}\\right)+${p3}_{x}\\left(${p2}_{x}^{2}-${p2}_{x}${p3}_{x}+${p2}_{y}^{2}\\right)-${p2}_{x}${p3}_{y}^{2}}{2\\left(${p1}_{x}\\left(${p3}_{y}-${p2}_{y}\\right)+${p1}_{y}\\left(${p2}_{x}-${p3}_{x}\\right)-${p2}_{x}${p3}_{y}+${p2}_{y}${p3}_{x}\\right)}`;
                 Cr = `\\sqrt{\\left(${p1}_{x}-${CxID}\\right)^{2}+\\left(${p1}_{y}-${CyID}\\right)^{2}}`;
             }
             //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
-            else if (shape.pointIDs.length == 2 && shape.lineIDs.length == 1) {
+            else if (construction == "2P+T") {
                 const [p1, p2] = shape.pointIDs;
                 const line = lines[shape.lineIDs[0]];
                 const [a, b] = [line.a, line.b]; //define 2 new variables to hold information of line's a and b
@@ -84,14 +85,14 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
                 Cr = `\\sqrt{\\left(${p1}_{x}-${CxID}\\right)^{2}+\\left(${p1}_{y}-${CyID}\\right)^{2}}`;
             }
             //Circle [2 points which are diameter]: pointIDs: [p1, p2]
-            else if (shape.pointIDs.length == 2 && shape.data.length == 0) {
+            else if (construction == "2PD") {
                 const [p1, p2] = shape.pointIDs;
                 Cx = `\\frac{${p1}_{x}+${p2}_{x}}{2}`;
                 Cy = `\\frac{${p1}_{y}+${p2}_{y}}{2}`;
                 Cr = `\\frac{1}{2}\\sqrt{\\left(${p1}_{x}-${p2}_{x}\\right)^{2}+\\left(${p1}_{y}-${p2}_{y}\\right)^{2}}`;
             }
             //Circle [center and radius]: pointIDs: [C], data: [r]
-            else if (shape.pointIDs.length == 1 && shape.data.length == 1) {
+            else if (construction == "C+R") {
                 const point = shape.pointIDs[0];
                 const radius = shape.data[0];
                 Cx = point + "_{x}";
@@ -103,7 +104,7 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
                 externalVariables.push(externalVariable);
             }
             //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"] //to differentiate from the diameter construction
-            else if (shape.pointIDs.length == 2 && shape.data[0] == "center+point") {
+            else if (construction == "C+P") {
                 const [center, point] = shape.pointIDs;
                 Cx = center + "_{x}";
                 Cy = center + "_{y}";
@@ -189,12 +190,10 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
     //Check if a point has more than 2 dependencies and if a circle has more than 3 constraints (may be some edge cases)
     const dependencyGraph = GenerateDependencyGraph(points, lines, shapes, pointConstraints, lineConstraints);
     let expressions = [];
-    expressions = expressions.concat(externalVariables);
     expressions = expressions.concat(pointExpressions);
     expressions = expressions.concat(lineExpressions);
     expressions = expressions.concat(shapeExpressions);
-    console.log(expressions);
-    return expressions;
+    return [externalVariables, expressions];
 };
 const RecomputeLine = (line) => {
     const [x1, y1] = [`${line.point1ID}_{x}`, `${line.point1ID}_{y}`];
