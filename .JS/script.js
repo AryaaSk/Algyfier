@@ -26,60 +26,62 @@ const Main = () => {
     };
     const calculatorElement = document.getElementById("calculator");
     CALCULATOR = InitCalculator(calculatorElement, options);
+    /*
     POINTS["a"] = Point(0, 10);
     POINTS["b"] = Point(10, 0);
+
     LINES["AB"] = Line("a", "b");
+
     POINTS["c"] = Point(5, "");
     LINE_CONSTRAINTS.push(LineConstraint("AB", "c", "y"));
+
     POINTS["d"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("d", "a", "h")); //inconsistencies arise when you try and supply too many constraints, e.g. a H and V to 2 points, but then also a distance from one point
     POINT_CONSTRAINTS.push(PointConstraint("d", "b", "v"));
+
     //Square
     //Values given in Point() construction will be overwritten by constraints anyway
     POINTS["h"] = Point(0, 0);
     POINTS["j"] = Point(0, 0);
     POINTS["k"] = Point(0, 0);
     POINTS["l"] = Point(0, 0);
+
     SHAPES["A"] = Shape("rectangle", ["h", "j", "k", "l"], [], [3, 3]);
+
     //Circles
     SHAPES["B"] = Shape("circle", ["b", "c", "d"], [], [], "3P");
     SHAPES["C"] = Shape("circle", ["k", "a"], ["JK"], [], "2P+T");
     SHAPES["D"] = Shape("circle", ["a", "h"], [], [], "2PD");
     SHAPES["E"] = Shape("circle", ["b"], [], [5], "C+R");
     SHAPES["F"] = Shape("circle", ["h", "l"], [], [], "C+P");
+
     LINES["A_"] = Line("a", "", 5);
     POINTS["f"] = Point(5, "");
     LINE_CONSTRAINTS.push(LineConstraint("A_", "f", "y"));
+    */
     /*
     //Testing line constructed with point + gradient, to check if it interferes with a shape with the same ID
     POINTS["a"] = Point(0, 0);
     POINTS["b"] = Point(-5, 10);
-    LINES["A_"] = Line("a", "", "5");
+    LINES["A_"] = Line("a", "", 5);
 
     SHAPES["A"] = Shape('circle', ["a", "b"], ["A_"], []);
 
     POINTS["c"] = Point(5, "");
     LINE_CONSTRAINTS.push(LineConstraint("A_", "c", "y"));
-
-    /*
+    */
     POINTS["a"] = Point(-2, 0);
     POINTS["b"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("b", "a", "h", 6));
     LINES["AB"] = Line("a", "b");
-
     POINTS["c"] = Point(0, "");
     LINE_CONSTRAINTS.push(LineConstraint("AB", "c", "y"));
-
     POINTS["d"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("d", "c", "v", 2));
-
     LINES["AD"] = Line("a", "d");
     LINES["BD"] = Line("b", "d");
-
     LINES["C_"] = Line("c", "", 3);
-
     SHAPES["A"] = Shape("circle", ["d"], [], [5], "C+R");
-    */
     //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
 };
 Main();

@@ -32,6 +32,7 @@ const Main = () => {
     const calculatorElement = document.getElementById("calculator")!;
     CALCULATOR = InitCalculator(calculatorElement, options);
 
+    /*
     POINTS["a"] = Point(0, 10);
     POINTS["b"] = Point(10, 0);
 
@@ -63,19 +64,20 @@ const Main = () => {
     LINES["A_"] = Line("a", "", 5);
     POINTS["f"] = Point(5, "");
     LINE_CONSTRAINTS.push(LineConstraint("A_", "f", "y"));
+    */
 
     /*
     //Testing line constructed with point + gradient, to check if it interferes with a shape with the same ID
     POINTS["a"] = Point(0, 0);
     POINTS["b"] = Point(-5, 10);
-    LINES["A_"] = Line("a", "", "5");
+    LINES["A_"] = Line("a", "", 5);
 
     SHAPES["A"] = Shape('circle', ["a", "b"], ["A_"], []);
 
     POINTS["c"] = Point(5, "");
     LINE_CONSTRAINTS.push(LineConstraint("A_", "c", "y"));
+    */
 
-    /*
     POINTS["a"] = Point(-2, 0);
     POINTS["b"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("b", "a", "h", 6));
@@ -93,7 +95,6 @@ const Main = () => {
     LINES["C_"] = Line("c", "", 3);
 
     SHAPES["A"] = Shape("circle", ["d"], [], [5], "C+R");
-    */
 
 
     //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)

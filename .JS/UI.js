@@ -21,7 +21,7 @@ const PopulateDivs = (points, lines, shapes, pointConstraints, lineConstraints) 
         const constraintType = pointConstraint.relationship == "h" ? "horizontal" : "vertical";
         let message = `(${pointConstraint.point1ID}) is ${constraintType} to (${pointConstraint.point2ID})`;
         if (pointConstraint.distance != undefined) {
-            message += ` with distance ${pointConstraint.distance}`;
+            message += ` with distance ≈ ${pointConstraint.distance}`;
         }
         element.innerHTML = message;
         POINT_CONSTRAINTS_DIV.append(element);
@@ -82,7 +82,7 @@ const PopulateDivs = (points, lines, shapes, pointConstraints, lineConstraints) 
             }
             else if (construction == "C+R") {
                 const radius = data[0];
-                message = `Circle <br> Dependent on Center (${p1}) <br> Radius: ${radius}`;
+                message = `Circle <br> Dependent on Center (${p1}) <br> Radius ≈ ${Math.round(radius)}`;
             }
         }
         const element = document.createElement("div");
@@ -150,10 +150,13 @@ const UpdateDataFromCalculator = () => {
             }
         }
         else if (id[0] == "C" && id.endsWith("r}")) {
+            const newValue = Number(CALCULATOR.expressionAnalysis[id].evaluation.value);
             const circleID = id.split("{")[1].split("r}").join("");
             const circle = SHAPES[circleID];
             //circle's radius, now check if it's constructed with center + radius
-            //...
+            if (circle.construction == "C+R") {
+                circle.data[0] = newValue;
+            }
         }
     }
 };

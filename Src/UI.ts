@@ -28,7 +28,7 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
         const constraintType = pointConstraint.relationship == "h" ? "horizontal" : "vertical";
         let message = `(${pointConstraint.point1ID}) is ${constraintType} to (${pointConstraint.point2ID})`;
         if (pointConstraint.distance != undefined) {
-            message += ` with distance ${pointConstraint.distance}`;
+            message += ` with distance ≈ ${pointConstraint.distance}`;
         }
         element.innerHTML = message
         POINT_CONSTRAINTS_DIV.append(element);
@@ -84,20 +84,20 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
             const construction = shape.construction!;
 
             //A little messy but seems to handle all the above cases, uses base and then adds extra information
-            message = `Circle <br> Dependent on ${independentPoints}`
+            message = `Circle <br> Dependent on ${independentPoints}`;
 
             if (construction == "2P+T") {
                 message += `<br> Tangent at (${p1}) with ${independentLines}`;
             }
             else if (construction == "2PD") {
-                message += "<br> [Diameter]"
+                message += "<br> [Diameter]";
             }
             else if (construction == "C+P") {
-                message += "<br> [Center + Point]"
+                message += "<br> [Center + Point]";
             }
             else if (construction == "C+R") {
                 const radius = data[0];
-                message = `Circle <br> Dependent on Center (${p1}) <br> Radius: ${radius}`
+                message = `Circle <br> Dependent on Center (${p1}) <br> Radius ≈ ${Math.round(<number>radius)}`;
             }
         }
 
@@ -173,11 +173,14 @@ const UpdateDataFromCalculator = () => {
             }
         }
         else if (id[0] == "C" && id.endsWith("r}")) {
+            const newValue = Number((<any>CALCULATOR.expressionAnalysis[id]).evaluation.value);
             const circleID = id.split("{")[1].split("r}").join("");
             const circle = SHAPES[circleID];
-            
+
             //circle's radius, now check if it's constructed with center + radius
-            //...
+            if (circle.construction! == "C+R") {
+                circle.data[0] = newValue;
+            }
         }
     }
 }
