@@ -70,18 +70,33 @@ const Main = () => {
     POINTS["c"] = Point(5, "");
     LINE_CONSTRAINTS.push(LineConstraint("A_", "c", "y"));
     */
+    /*
     POINTS["a"] = Point(-2, 0);
     POINTS["b"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("b", "a", "h", 6));
     LINES["AB"] = Line("a", "b");
+
     POINTS["c"] = Point(0, "");
     LINE_CONSTRAINTS.push(LineConstraint("AB", "c", "y"));
+
     POINTS["d"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("d", "c", "v", 2));
+
     LINES["AD"] = Line("a", "d");
     LINES["BD"] = Line("b", "d");
+
     LINES["C_"] = Line("c", "", 3);
+
     SHAPES["A"] = Shape("circle", ["d"], [], [5], "C+R");
+    */
+    //Testing point constraint and rectangle binding
+    POINTS["h"] = Point(0, 0);
+    POINTS["j"] = Point("", "");
+    POINTS["k"] = Point("", "");
+    POINTS["l"] = Point("", "");
+    SHAPES["A"] = Shape("rectangle", ["h", "j", "k", "l"], [], [3, 3]);
+    POINTS["a"] = Point("", "");
+    POINT_CONSTRAINTS.push(PointConstraint("a", "h", "h", 5));
     //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
 };
 Main();

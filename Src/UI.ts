@@ -28,7 +28,7 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
         const constraintType = pointConstraint.relationship == "h" ? "horizontal" : "vertical";
         let message = `(${pointConstraint.point1ID}) is ${constraintType} to (${pointConstraint.point2ID})`;
         if (pointConstraint.distance != undefined) {
-            message += ` with distance ≈ ${pointConstraint.distance}`;
+            message += ` with distance ≈ ${Math.round(pointConstraint.distance)}`;
         }
         element.innerHTML = message
         POINT_CONSTRAINTS_DIV.append(element);
@@ -68,15 +68,9 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
         if (shape.type == "rectangle") {
             const [p1, p2, p3, p4] = shape.pointIDs;
             const [height, width] = shape.data;
-            message = `Rectangle <br> (${p2}), (${p3}), (${p4}) dependent on (${p1}) <br> Height: ${Math.round(<number>height)}, Width: ${Math.round(<number>width)}`;
+            message = `Rectangle <br> (${p2}), (${p3}), (${p4}) dependent on (${p1}) <br> Height ≈ ${Math.round(<number>height)}, Width ≈ ${Math.round(<number>width)}`;
         }
         else if (shape.type == "circle") {
-            //Circle [3 points]: pointIDs: [p1, p2, p3]
-            //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
-            //Circle [2 points which are diameter]: pointIDs: [p1, p2]
-            //Circle [center and radius]: pointIDs: [C], data: [r]
-            //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"]
-
             const p1 = shape.pointIDs[0];
             const independentPoints = shape.pointIDs.map((v) => { return `(${v})` }).join(", ");
             const independentLines = shape.lineIDs.join(", ");
