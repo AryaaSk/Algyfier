@@ -13,11 +13,11 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
         pointConstraints,
         lineConstraints
     ] = [
-        JSON.parse(JSON.stringify(ps)),
-        JSON.parse(JSON.stringify(ls)),
-        JSON.parse(JSON.stringify(ss)),
-        JSON.parse(JSON.stringify(pCs)),
-        JSON.parse(JSON.stringify(lCs))
+        <{ [id: string] : Point }>JSON.parse(JSON.stringify(ps)),
+        <{ [id: string] : Line }>JSON.parse(JSON.stringify(ls)),
+        <{ [id: string] : Shape }>JSON.parse(JSON.stringify(ss)),
+        <PointConstraint[]>JSON.parse(JSON.stringify(pCs)),
+        <LineConstraint[]>JSON.parse(JSON.stringify(lCs))
     ];
 
     const pointExpressions: Desmos.ExpressionState[] = [];
@@ -32,7 +32,7 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
         const line = lines[id];
         if (id[1] == "_") {
             const linePointID = id[0];
-            const gradientVariableID = `m_{${linePointID}}`
+            const gradientVariableID = `M_{${linePointID}}`
             const externalVariable: Desmos.ExpressionState = { id: gradientVariableID, latex: `${gradientVariableID} = ${line.gradient !}`};
             externalVariables.push(externalVariable);
 
@@ -41,11 +41,11 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
             const gradientPointID = `${linePointID}`; //using same id as line, as this will prevent the point from being displayed (line will override in desmos map), so we can just take advantage of the x and y coordinate without having to display the point
             points[gradientPointID] = Point(`${p1}_{x} + 1`, `${p1}_{y} + ${gradientVariableID}`);
             line.point2ID = gradientPointID;
+            line.gradient = undefined; //From here on we just treat lines constructed with gradients as if they were constructed with 2 points instead
 
             RecomputeLine(line);
         }
     }
-    //From here on we just treat lines constructed with gradients as if they were constructed with 2 points instead
 
     //shape: for rectangle, will need to consider this as point constraints
     //       for circle, simply use information given an construct using points and/or line equations already calculated

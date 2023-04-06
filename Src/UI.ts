@@ -75,7 +75,7 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
             //A little messy but seems to handle all the above cases, uses base and then adds extra information
             message = `Circle <br> Dependent on ${independentPoints}`
 
-            //the only construction involving a line is tangent
+            //the only construction involving a line is tangent with 2 points
             if (independentLines.length > 0) {
                 message += `<br> Tangent at (${p1}) with ${independentLines}`;
             }
@@ -106,10 +106,10 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
 }
 
 const UpdateDataFromCalculator = () => {
-    //reads data from calculator, and updates x and y values of points
     const data = CALCULATOR.getExpressions();
     for (const expression of data) {
         const id = expression.id!;
+
         const point = POINTS[id];
         if (point != undefined) {
             //we know the id from desmos is definetly a point, get x and y value of point from desmos
@@ -123,11 +123,20 @@ const UpdateDataFromCalculator = () => {
                 point.y = desmosY
             }
         }
+        else if (id[0] == "M") { //gradient
+            const pointIDUpper = id.split("{")[1].split("}").join("");
+            const lineID = pointIDUpper + "_"
+            const newGradient = Number((<any>CALCULATOR.expressionAnalysis[id]).evaluation.value);
+
+            const line = LINES[lineID];
+            line.gradient = String(newGradient);
+        }
+        else if (id[0] == "S") { //point construct or could be part of a shape
+            const [independantID, depdendentID] = id.split("{")[1].split("}").join("").split("");
+        }
+
     }
 
-    console.log(POINTS);
-
-    //Also need to get gradient data and update on the corresponding line generated with a gradient
     //Gather shape data, e.g. if rectangle height and width have been altered, or if circle's radius has been altered
 }
 

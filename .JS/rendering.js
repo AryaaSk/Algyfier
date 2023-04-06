@@ -24,7 +24,7 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
         const line = lines[id];
         if (id[1] == "_") {
             const linePointID = id[0];
-            const gradientVariableID = `m_{${linePointID}}`;
+            const gradientVariableID = `M_{${linePointID}}`;
             const externalVariable = { id: gradientVariableID, latex: `${gradientVariableID} = ${line.gradient}` };
             externalVariables.push(externalVariable);
             //Create new point which is 1 more than p1 horizontally and m more than p2 vertically
@@ -32,10 +32,10 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
             const gradientPointID = `${linePointID}`; //using same id as line, as this will prevent the point from being displayed (line will override in desmos map), so we can just take advantage of the x and y coordinate without having to display the point
             points[gradientPointID] = Point(`${p1}_{x} + 1`, `${p1}_{y} + ${gradientVariableID}`);
             line.point2ID = gradientPointID;
+            line.gradient = undefined; //From here on we just treat lines constructed with gradients as if they were constructed with 2 points instead
             RecomputeLine(line);
         }
     }
-    //From here on we just treat lines constructed with gradients as if they were constructed with 2 points instead
     //shape: for rectangle, will need to consider this as point constraints
     //       for circle, simply use information given an construct using points and/or line equations already calculated
     for (const id in shapes) {

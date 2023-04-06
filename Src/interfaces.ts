@@ -33,15 +33,6 @@ interface Shape {
     lineIDs: string[];
 
     data: (number | string)[]; //differet data assosiated with different shapes, e.g. for circle: [Cx, Cy, r]
-
-    //Conventions:
-    //Square/Rectangle: pointIDs: [independent (bottom left), bottom right, top right, top left], data: [height, width]
-    //Circle [3 points]: pointIDs: [p1, p2, p3]
-    //Circle [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
-    //Circle [2 points which are diameter]: pointIDs: [p1, p2]
-    //Circle [center and radius]: pointIDs: [C], data: [r]
-    //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"]
-    //Circle [center and tangent] (having got formula yet)
 }
 
 const Point = (x: number | string, y: number | string): Point => {
@@ -65,10 +56,12 @@ const Shape = (type: "circle" | "rectangle", pointIDs: string[], lineIDs: string
 //ID conventions
 //Point: a
 //Point constraint: - (when no distance) or S_{independent}{dependent}, e.g. S_{ab}
-//Line: AB (alphabetical order) ot just A_ if you use a gradient (will generate another point with id as 'A')
+//Line: AB (alphabetical order) ot just A_ if you use a gradient (will generate another point with id as 'A' with external variable 'M_A')
 //Line Constraint: - (array not dictionary)
 //Shape: A (id doesn't matter if it is a polygon, if it is a circle then it will appear as "C_{A}")
 //I had to use altered IDs for the shapes when outputting due to the newly formed point when creating a line with a gradient (the point is just the capital of p1, so it would interfere with the original shape ID)
+
+//Forbidden letters: 'e', 'x', 'y'
 
 //Shape definitions
 //Square/Rectangle: pointIDs: [independent (bottom left), bottom right, top right, top left], data: [height, width]
@@ -77,4 +70,4 @@ const Shape = (type: "circle" | "rectangle", pointIDs: string[], lineIDs: string
 //Circle [2 points which are diameter]: pointIDs: [p1, p2]
 //Circle [center and radius]: pointIDs: [C], data: [r]
 //Circle [center and point]: pointIDs: [C, p1], data: ["center+point"]
-//Circle [center and tangent] (having got formula yet)
+//Circle [center and tangent] (haven't got formula yet)
