@@ -18,6 +18,9 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
         const element = document.createElement("div");
         element.className = "cell";
         element.innerHTML = `${id}`
+        element.onclick = () => {
+            PointClick(id, points[id]);
+        }
         POINTS_DIV.append(element);
     }
 
@@ -26,6 +29,10 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
         const element = document.createElement("div");
         element.className = "row";
         const constraintType = pointConstraint.relationship == "h" ? "horizontal" : "vertical";
+        element.onclick = () => {
+            PointConstraintClick(pointConstraint);
+        }
+
         let message = `(${pointConstraint.point1ID}) is ${constraintType} to (${pointConstraint.point2ID})`;
         if (pointConstraint.distance != undefined) {
             message += ` with distance ≈ ${Math.round(pointConstraint.distance)}`;
@@ -38,6 +45,9 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
     for (const id in lines) {
         const element = document.createElement("div");
         element.className = "cell";
+        element.onclick = () => {
+            LineClick(id, lines[id]);
+        }
 
         let message = "";
         const line = lines[id];
@@ -55,6 +65,10 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
     for (const lineConstraint of lineConstraints) {
         const element = document.createElement("div");
         element.className = "row";
+        element.onclick = () => {
+            LineConstraintClick(lineConstraint);
+        }
+
         const message = `(${lineConstraint.pointID}) is ${lineConstraint.constraintType}-constrained to line ${lineConstraint.lineID}`;
         element.innerHTML = message
         LINE_CONSTRAINTS_DIV.append(element);
@@ -97,11 +111,23 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
 
         const element = document.createElement("div");
         element.className = "shapeRow";
+        element.onclick = () => {
+            ShapeClick(id, shape);
+        }
+
         element.innerHTML =
         `<div>${id}</div>
         <div>${message}</div>`;
         SHAPES_DIV.append(element);
     }
+
+    /* //Need to add these buttons manually
+    POINTS_DIV.innerHTML += `<button class="cell add" id="addPoint" > + </button>`;
+    POINT_CONSTRAINTS_DIV.innerHTML += `<button class="cell add" id="addPointConstraint" > + </button>`;
+    LINES_DIV.innerHTML += ` <button class="cell add" id="addLine" > + </button>`;
+    LINE_CONSTRAINTS_DIV.innerHTML += `<button class="cell add" id="addLineConstraint" > + </button>`;
+    SHAPES_DIV.innerHTML += `<button class="cell add" id="addShape" > + </button>`
+    */
 }
 
 const UpdateDataFromCalculator = () => {
@@ -196,16 +222,34 @@ const AttachListeners = () => {
         UpdateCalculator(externalVariables, expressions);
     }
 }
+//All data taken in is passed by reference, so can just edit it easily
+const PointClick = (id: string, point: Point) => {
+    console.log(id, point);
+}
+const PointConstraintClick = (pointConstraint: PointConstraint) => {
+    console.log(pointConstraint);
+}
+const LineClick = (id: string, line: Line) => {
+    console.log(id, line);
+}
+const LineConstraintClick = (lineConstraint: LineConstraint) => {
+    console.log(lineConstraint);
+}
+const ShapeClick = (id: string, shape: Shape) => {
+    console.log(id, shape);
+}
 
 
 
 
 
-const MainUI = () => {
+const UpdateUI = () => {
     PopulateDivs(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
-    AttachListeners();
-
     const [externalVariables, expressions] = RenderScene(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
     UpdateCalculator(externalVariables, expressions);
+}
+const MainUI = () => {
+    AttachListeners();
+    UpdateUI();
 }
 MainUI();

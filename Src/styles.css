@@ -136,22 +136,22 @@ div {
 #points {
     grid-template-columns: repeat(auto-fit, var(--pointCellSize));
 }
-#points > div {
+#points > div, #points > button {
     height: var(--pointCellSize);
 }
-#pointContstraints > div {
+#pointContstraints > div, #pointConstraints > button {
     height: var(--constraintCellSize);
 }
 #lines {
     grid-template-columns: repeat(auto-fit, var(--lineCellSize));
 }
-#lines > div {
+#lines > div, #lines > button {
     height: var(--lineCellSize);
 }
-#lineConstraints > div {
+#lineConstraints > div, #lineConstraints > button {
     height: var(--constraintCellSize);
 }
-#shapes > div {
+#shapes > div, #shapes > button {
     height: var(--shapeCellSize);
 }
 
@@ -204,4 +204,16 @@ div {
     padding-left: 10px;
     justify-content: left;
     font-size: 24px;
+}
+
+.add {
+    background-color: gainsboro;
+    transition: 75ms background-color;
+    color: black;
+}
+.add:active {
+    background-color: grey;
+}
+#addShape {
+    font-size: 50px;
 }
