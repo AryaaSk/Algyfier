@@ -87,6 +87,8 @@ const Main = () => {
 
     LINES["C_"] = Line("c", "", 3);
 
+    //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
+
     SHAPES["A"] = Shape("circle", ["d"], [], [5], "C+R");
     */
     //Testing point constraint and rectangle binding
@@ -97,7 +99,6 @@ const Main = () => {
     SHAPES["A"] = Shape("rectangle", ["h", "j", "k", "l"], [], [3, 3]);
     POINTS["a"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("a", "h", "h", 5));
-    //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
 };
 Main();
 //TODO

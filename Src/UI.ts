@@ -121,13 +121,19 @@ const PopulateDivs = (points: { [id: string] : Point }, lines: { [id: string] : 
         SHAPES_DIV.append(element);
     }
 
-    /* //Need to add these buttons manually
-    POINTS_DIV.innerHTML += `<button class="cell add" id="addPoint" > + </button>`;
-    POINT_CONSTRAINTS_DIV.innerHTML += `<button class="cell add" id="addPointConstraint" > + </button>`;
-    LINES_DIV.innerHTML += ` <button class="cell add" id="addLine" > + </button>`;
-    LINE_CONSTRAINTS_DIV.innerHTML += `<button class="cell add" id="addLineConstraint" > + </button>`;
-    SHAPES_DIV.innerHTML += `<button class="cell add" id="addShape" > + </button>`
-    */
+    const buttonElements = [];
+    for (let i = 0; i != 5; i += 1) {
+        const element = document.createElement('button');
+        element.className = "cell add";
+        element.innerText = "+";
+        element.onclick = AddButtonsCallbacks[i];
+        buttonElements.push(element);
+    }
+    POINTS_DIV.append(buttonElements[0]); //to ensure unique references
+    POINT_CONSTRAINTS_DIV.append(buttonElements[1]);
+    LINES_DIV.append(buttonElements[2]);
+    LINE_CONSTRAINTS_DIV.append(buttonElements[3]);
+    SHAPES_DIV.append(buttonElements[4]);
 }
 
 const UpdateDataFromCalculator = () => {
@@ -221,22 +227,6 @@ const AttachListeners = () => {
         const [externalVariables, expressions] = RenderScene(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
         UpdateCalculator(externalVariables, expressions);
     }
-}
-//All data taken in is passed by reference, so can just edit it easily
-const PointClick = (id: string, point: Point) => {
-    console.log(id, point);
-}
-const PointConstraintClick = (pointConstraint: PointConstraint) => {
-    console.log(pointConstraint);
-}
-const LineClick = (id: string, line: Line) => {
-    console.log(id, line);
-}
-const LineConstraintClick = (lineConstraint: LineConstraint) => {
-    console.log(lineConstraint);
-}
-const ShapeClick = (id: string, shape: Shape) => {
-    console.log(id, shape);
 }
 
 
