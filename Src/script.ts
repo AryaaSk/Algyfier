@@ -14,10 +14,11 @@ const InitCalculator = (element: HTMLElement, options: { [k : string] : boolean 
     return calculator;
 }
 
-const UpdateCalculator = (externalVariables: Desmos.ExpressionState[], expressions: Desmos.ExpressionState[]) => {
+const UpdateCalculator = (externalVariables: Desmos.ExpressionState[], expressions: Desmos.ExpressionState[], helperExpressions: Desmos.ExpressionState[]) => {
     const expression_states = CALCULATOR.getExpressions();
     CALCULATOR.removeExpressions(expression_states); //clear old expressions
     CALCULATOR.setExpressions(externalVariables);
+    CALCULATOR.setExpressions(helperExpressions);
     CALCULATOR.setExpressions(expressions);
 }
 
@@ -78,7 +79,6 @@ const Main = () => {
     LINE_CONSTRAINTS.push(LineConstraint("A_", "c", "y"));
     */
 
-    /*
     POINTS["a"] = Point(-2, 0);
     POINTS["b"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("b", "a", "h", 6));
@@ -93,13 +93,9 @@ const Main = () => {
     LINES["AD"] = Line("a", "d");
     LINES["BD"] = Line("b", "d");
 
-    LINES["C_"] = Line("c", "", 3);
-
     //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
 
-    SHAPES["A"] = Shape("circle", ["d"], [], [5], "C+R");
-    */
-
+    /*
     //Testing point constraint and rectangle binding
     POINTS["h"] = Point(0, 0);
     POINTS["j"] = Point("", "");
@@ -109,6 +105,7 @@ const Main = () => {
 
     POINTS["a"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("a", "h", "h", 5));
+    */
 }
 Main();
 

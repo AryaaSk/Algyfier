@@ -220,12 +220,14 @@ const AttachListeners = () => {
     bind.onclick = () => {
         UpdateDataFromCalculator();
         PopulateDivs(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
+        Match("c_{x}", "HELPER-P_{MADMBD}", -1)
     }
 
     const construct = document.getElementById("construct")!;
     construct.onclick = () => {
         const [externalVariables, expressions] = RenderScene(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
-        UpdateCalculator(externalVariables, expressions);
+        const helperExpressions = HelperExpressions();
+        UpdateCalculator(externalVariables, expressions, helperExpressions);
     }
 }
 
@@ -236,7 +238,8 @@ const AttachListeners = () => {
 const UpdateUI = () => {
     PopulateDivs(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
     const [externalVariables, expressions] = RenderScene(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
-    UpdateCalculator(externalVariables, expressions);
+    const helperExpressions = HelperExpressions();
+    UpdateCalculator(externalVariables, expressions, helperExpressions);
 }
 const MainUI = () => {
     AttachListeners();
