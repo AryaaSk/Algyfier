@@ -1,6 +1,6 @@
 "use strict";
 const ExpressionEvaluateTime = 100;
-const MatchAccuracy = 10; //10 d.p. of accuracy
+const MatchAccuracy = 12; //12 d.p. of accuracy
 //File to store all functions which provide utilities to extract data from the desmos calculator
 //E.g. the distance between 2 points, area under given curve
 //Most important function: match(input, output, desiredValue)
@@ -10,7 +10,7 @@ const TestValue = async (inputID, value, outputID) => {
     const desmosOutput = CALCULATOR.expressionAnalysis[outputID];
     return desmosOutput.evaluation.value;
 };
-const Match = async (inputID, outputID, desiredOutput) => {
+const Match = async (inputID, outputID, desiredOutput, startingAccuracy) => {
     //input and output are both latex for the id's of the sliders which we are dealing with
     //e.g. input may be a point's x coordinate, and output may be something calculated, e.g. the distance between that point and another
     //this function will use a 'gradient descent' like algorithm to adjust the input up and down until the output's value is the desired value
@@ -27,8 +27,8 @@ const Match = async (inputID, outputID, desiredOutput) => {
     const stepSign = y2 < desiredOutput ? gradientSign : -1 * gradientSign;
     let currentValue = startingInput;
     let outputSign = y1 < desiredOutput ? -1 : 1;
-    console.log(stepSign);
-    for (let placeValue = 0; placeValue >= -MatchAccuracy; placeValue -= 1) { //e.g. if placeValue 0, we are focusing on the 'ones' column
+    const initialPlaceValue = startingAccuracy == undefined ? 0 : startingAccuracy;
+    for (let placeValue = initialPlaceValue; placeValue >= -MatchAccuracy; placeValue -= 1) { //e.g. if placeValue 0, we are focusing on the 'ones' column
         const step = stepSign * 10 ** placeValue;
         //continue incrementing the step to currentValue until a change in outputSign
         while (true) {
