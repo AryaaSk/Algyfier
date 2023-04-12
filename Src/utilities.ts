@@ -49,6 +49,7 @@ const Match = async (inputID: string, outputID: string, desiredValue: number) =>
     
 
     //Two methods: Above root bisection like, or gradient descent (which I think would be more efficient)
+    //Gradient: Use gradient to continue changing x until change in sign, at which point go to previous x value and repeat with next decimal point until you get 8+ d.p. of precision
 }
 
 const Wait = (t: number) => {

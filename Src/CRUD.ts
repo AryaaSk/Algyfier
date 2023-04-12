@@ -109,6 +109,82 @@ const AddButtonsCallbacks = [
 
     () => { //shape
         //Need to actually implement a UI system for the shape, since it is too complicated to input via text
+        //This one won't have any validation for all the different cases
+
+        const id = prompt("New Shape: [id]")?.toUpperCase();
+        if (id == undefined) {
+            return;
+        }
+        if (SHAPES[id] != undefined) {
+            alert("Already another shape with same ID");
+        }
+        if (id.length != 1) {
+            alert("ID must be 1 character long");
+            return;
+        }
+        const validIds = "abcdefghijklmnopqrstuvwxyz".toUpperCase().split("");
+        if (validIds.includes(id) == false) {
+            alert("ID must be a letter in the alphabet");
+            return;
+        }
+
+        const type = prompt("New Shape [circle|rectangle]")?.toLowerCase();;
+        if (type == undefined || (type != "circle" && type != "rectangle")) {
+            return;
+        }
+
+        //Square/Rectangle: pointIDs: [independent (bottom left), bottom right, top right, top left], data: [height, width]
+        //3P [3 points]: pointIDs: [p1, p2, p3]
+        //2P+T [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]
+        //2PD [2 points which are diameter]: pointIDs: [p1, p2]
+        //C+R [center and radius]: pointIDs: [C], data: [r]
+        //C+P [center and point]: pointIDs: [C, p1]
+        //Circle [center and tangent] C+T (haven't got formula yet)
+
+        let pointIDs: string[] = [];
+        let lineIDs: string[] = [];
+        let data: number[] = [];
+        let construction: string | undefined = undefined;
+
+        if (type == "rectangle") {
+            const pointIDData = prompt("Points: [indepdendent, p1, p2, p3]");
+            pointIDs = pointIDData!.replaceAll(" ", "").split(",").map((v) => { return v.toLowerCase(); });
+
+            const dimensionData = prompt("Dimensions: [height, width]");
+            data = dimensionData!.replaceAll(" ", "").split(",").map((v) => { return Number(v); });
+        }
+        else {
+            //circle
+
+            const constructionData = prompt(`Construction [construction]: \n\n3P [3 points]: pointIDs: [p1, p2, p3]\n2P+T [2 points + tangent]: pointIDs: [p1, p2], lineIDs: [tangentAtp1]\n2PD [2 points which are diameter]: pointIDs: [p1, p2]\nC+R [center and radius]: pointIDs: [C], data: [r]\nC+P [center and point]: pointIDs: [C, p1]`)?.toUpperCase();
+            if (constructionData == undefined) {
+                return;
+            }
+
+            const validConstructions = "3P,2P+T,2PD,C+R,C+P".split(",");
+            if (validConstructions.includes(constructionData) == false) {
+                alert(`Not valid construction, must be one of: ${validConstructions}`);
+                return;
+            }
+
+            construction = constructionData;
+            const pointData = prompt("Points (only if required): [p1, p2 ...]")?.replaceAll(" ", "").toLowerCase().split(",");
+            if (pointData == undefined) {
+                return;
+            }
+            const lineData = prompt("Lines (only if required): [AB, A_ ...]")?.replaceAll(" ", "").toUpperCase().split(",");
+            if (lineData == undefined) {
+                return;
+            }
+            const shapeData = prompt("Data (only if required): []")?.replaceAll(" ", "").split(",").map((v) => { return Number(v);  });
+            if (shapeData == undefined) {
+                return;
+            }
+            [pointIDs, lineIDs, data] = [pointData, lineData, shapeData];
+        }
+
+        SHAPES[id] = Shape(type, pointIDs, lineIDs, data, construction);
+        UpdateUI();
     }
 ];
 

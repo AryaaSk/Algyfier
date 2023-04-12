@@ -39,6 +39,7 @@ const Match = async (inputID, outputID, desiredValue) => {
     CALCULATOR.setExpression({ latex: `y = ${desiredValue}` });
     //Effectively outputs the input -> output function, and we are trying to get the values as close to the y = desiredValue line
     //Two methods: Above root bisection like, or gradient descent (which I think would be more efficient)
+    //Gradient: Use gradient to continue changing x until change in sign, at which point go to previous x value and repeat with next decimal point until you get 8+ d.p. of precision
 };
 const Wait = (t) => {
     const promise = new Promise((resolve) => {
