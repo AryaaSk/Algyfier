@@ -188,7 +188,12 @@ const AttachListeners = () => {
     bind.onclick = () => {
         UpdateDataFromCalculator();
         PopulateDivs(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
-        Match("c_{x}", "HELPER-P_{MADMBD}", -1);
+    };
+    document.body.onkeydown = ($e) => {
+        const key = $e.key;
+        if (key == " ") {
+            Match("c_{x}", "HELPER-P_{MADMBD}", -1);
+        }
     };
     const construct = document.getElementById("construct");
     construct.onclick = () => {
