@@ -73,7 +73,7 @@ div {
     border-left: 1px solid black;
 }
 
-#setupConstraintsWrapper {
+.layout {
     height: 100%;
     width: 100%;
 
@@ -90,7 +90,7 @@ div {
     background-color: rgb(235, 235, 235);
 }
 
-#setupConstraintsWrapper > .dataContainer { /* Individual sections e.g. points, lines */
+.layout > .dataContainer { /* Individual sections e.g. points, lines */
     height: 100%;
     width: 100%;
 
@@ -250,9 +250,10 @@ div {
 
 
 
-#helperConstraintsWrapper {
-    height: 100%;
-    width: 100%;
-
-    background-color: red;
+#match {
+    background-color: rgb(186, 41, 186);
+    color: white;
+}
+#match:active {
+    background-color: rgb(172, 4, 172);;
 }

@@ -13,7 +13,7 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
         JSON.parse(JSON.stringify(pCs)),
         JSON.parse(JSON.stringify(lCs))
     ];
-    const pointExpressions = [];
+    let pointExpressions = [];
     const lineExpressions = [];
     const externalVariables = [];
     const shapeExpressions = [];
@@ -32,7 +32,6 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
             const gradientPointID = `${linePointID}`; //using same id as line, as this will prevent the point from being displayed (line will override in desmos map), so we can just take advantage of the x and y coordinate without having to display the point
             points[gradientPointID] = Point(`${p1}_{x} + 1`, `${p1}_{y} + ${gradientVariableID}`);
             line.point2ID = gradientPointID;
-            line.gradient = undefined; //From here on we just treat lines constructed with gradients as if they were constructed with 2 points instead
             RecomputeLine(line);
         }
     }
@@ -125,6 +124,14 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
         const equation = line.equation;
         const l = { id: id, latex: equation };
         lineExpressions.push(l);
+        if (line.gradient == undefined) {
+            //add a gradient variable into the external variables, if user wants to use later
+            const [p1, p2] = [line.point1ID, line.point2ID];
+            const latex = `M_{${id}}=\\frac{${p1}_{y}-${p2}_{y}}{${p1}_{x}-${p2}_{x}}`;
+            console.log(id, latex);
+            const gradientReadOnly = { id: `M_{${id}}`, latex: latex };
+            externalVariables.push(gradientReadOnly);
+        }
     }
     //point constraints: write the dependant point in terms of the independant point
     for (const constraint of pointConstraints) {
@@ -169,6 +176,7 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
         }
     }
     //points: generate 2 variables for each point, point_x and point_y
+    const pointDisplays = [];
     for (const id in points) {
         const point = points[id];
         const x = point.x;
@@ -181,8 +189,10 @@ const RenderScene = (ps, ls, ss, pCs, lCs) => {
             p.showLabel = false;
             p.hidden = true;
         }
-        pointExpressions.push(p, pX, pY);
+        pointDisplays.push(p);
+        pointExpressions.push(pX, pY);
     }
+    pointExpressions = pointExpressions.concat(pointDisplays);
     //also need to check if some points are 'over-constrained'
     //e.g. a point has 2 variables of freedom (x and y), so if there are more than 2 constraints acting on it then it is 'over-constrained'
     //constraints on points include: point constraints (constrain v or h to a point), point constraints (distance), line constraints, 

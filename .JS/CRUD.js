@@ -181,3 +181,15 @@ const LineConstraintClick = (lineConstraint) => {
 const ShapeClick = (id, shape) => {
     console.log(id, shape);
 };
+//Helper data
+const GetMatchData = () => {
+    const data = prompt("Set input to an approximately close value.\nThen enter IDs of input and output: [inputID, outputID, desiredValue]")?.replaceAll(" ", "").split(",");
+    if (data == undefined) {
+        return undefined;
+    }
+    if (isNaN(Number(data[2]))) {
+        alert("Desired value must be a plain number");
+        return undefined;
+    }
+    return [data[0], data[1], Number(data[2])];
+};

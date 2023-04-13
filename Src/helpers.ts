@@ -7,6 +7,15 @@ let HELPERS: Helper[] = [];
 //E.g. the distance between 2 points, area under given curve
 //Most important function: match(input, output, desiredValue)
 
+const Wait = (t: number) => {
+    const promise = new Promise((resolve) => {
+        setTimeout(() => {
+            resolve("Done");
+        }, t);
+    });
+    return promise;
+}
+
 const TestValue = async (inputID: string, value: Number, outputID: string) => {
     CALCULATOR.setExpression({ id: inputID, latex: `${inputID} = ${value}`});
     await Wait(EXPRESSION_EVALUATE_TIME);
@@ -52,14 +61,6 @@ const Match = async (inputID: string, outputID: string, desiredOutput: number, s
     }
 }
 
-const Wait = (t: number) => {
-    const promise = new Promise((resolve) => {
-        setTimeout(() => {
-            resolve("Done");
-        }, t);
-    });
-    return promise;
-}
 
 
 
@@ -71,8 +72,6 @@ const HelperExpressions = () => {
     //Generate helpers ito desmos expressions
 
     const expressions: Desmos.ExpressionState[] = [
-        { id: "HELPER-M_{AD}", latex: "M_{AD}=\\frac{d_{y}-a_{y}}{d_{x}-a_{x}}" },
-        { id: "HELPER-M_{BD}", latex: "M_{BD}=\\frac{d_{y}-b_{y}}{d_{x}-b_{x}}" },
         { id: "HELPER-P_{MADMBD}", latex: "P_{MADMBD}=M_{AD}\\cdot M_{BD}" }
     ];
     return expressions;

@@ -126,8 +126,20 @@ const AttachListeners = () => {
     construct.onclick = () => {
         UpdateCalculator();
     };
+    const match = document.getElementById("match");
+    match.onclick = () => {
+        const data = GetMatchData();
+        if (data == undefined) {
+            return;
+        }
+        const [inputID, outputID, desiredValue] = data;
+        console.log(data);
+        //Match(<string>inputID, <string>outputID, <number>desiredValue);
+        //Match("c_{x}", "P_{MADMBD}", -1);
+        Match("c_{x}", "HELPER-P_{MADMBD}", -1);
+    };
     const setupNav = document.getElementById("setup");
-    const helpersNav = document.getElementById("setup");
+    const helpersNav = document.getElementById("helpers");
     const setupContainer = document.getElementById("setupConstraintsWrapper");
     const helperContainer = document.getElementById("helperConstraintsWrapper");
     setupNav.onclick = () => {
