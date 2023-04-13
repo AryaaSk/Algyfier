@@ -1,5 +1,5 @@
-const ExpressionEvaluateTime = 100;
-const MatchAccuracy = 12; //12 d.p. of accuracy
+const EXPRESSION_EVALUATE_TIME = 100;
+const MATCH_ACCURACY = 12; //12 d.p. of accuracy
 
 //File to store all functions which provide utilities to extract data from the desmos calculator
 //E.g. the distance between 2 points, area under given curve
@@ -7,7 +7,7 @@ const MatchAccuracy = 12; //12 d.p. of accuracy
 
 const TestValue = async (inputID: string, value: Number, outputID: string) => {
     CALCULATOR.setExpression({ id: inputID, latex: `${inputID} = ${value}`});
-    await Wait(ExpressionEvaluateTime);
+    await Wait(EXPRESSION_EVALUATE_TIME);
     const desmosOutput = CALCULATOR.expressionAnalysis[outputID];
     return <number>desmosOutput.evaluation!.value;
 }
@@ -15,7 +15,6 @@ const TestValue = async (inputID: string, value: Number, outputID: string) => {
 const Match = async (inputID: string, outputID: string, desiredOutput: number, startingAccuracy?: number) => {
     //input and output are both latex for the id's of the sliders which we are dealing with
     //e.g. input may be a point's x coordinate, and output may be something calculated, e.g. the distance between that point and another
-    //this function will use a 'gradient descent' like algorithm to adjust the input up and down until the output's value is the desired value
     
     //Gradient method: Use gradient to continue changing x until change in sign, at which point go to previous x value and repeat with next decimal point until you get 8+ d.p. of precision
     const startingInput = <number>CALCULATOR.expressionAnalysis[inputID].evaluation!.value;
@@ -34,8 +33,8 @@ const Match = async (inputID: string, outputID: string, desiredOutput: number, s
 
     let currentValue = startingInput;
     let outputSign = y1 < desiredOutput ? -1 : 1;
-    const initialPlaceValue = startingAccuracy == undefined ? 0 : startingAccuracy;
-    for (let placeValue = initialPlaceValue; placeValue >= -MatchAccuracy; placeValue -= 1) { //e.g. if placeValue 0, we are focusing on the 'ones' column
+    const initialPlaceValue = startingAccuracy == undefined ? -1 : startingAccuracy;
+    for (let placeValue = initialPlaceValue; placeValue >= -MATCH_ACCURACY; placeValue -= 1) { //e.g. if placeValue 0, we are focusing on the 'ones' column
         const step = stepSign * 10**placeValue;
 
         //continue incrementing the step to currentValue until a change in outputSign

@@ -13,7 +13,6 @@ const TestValue = async (inputID, value, outputID) => {
 const Match = async (inputID, outputID, desiredOutput, startingAccuracy) => {
     //input and output are both latex for the id's of the sliders which we are dealing with
     //e.g. input may be a point's x coordinate, and output may be something calculated, e.g. the distance between that point and another
-    //this function will use a 'gradient descent' like algorithm to adjust the input up and down until the output's value is the desired value
     //Gradient method: Use gradient to continue changing x until change in sign, at which point go to previous x value and repeat with next decimal point until you get 8+ d.p. of precision
     const startingInput = CALCULATOR.expressionAnalysis[inputID].evaluation.value;
     const y1 = await TestValue(inputID, startingInput, outputID);
