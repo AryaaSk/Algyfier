@@ -221,7 +221,7 @@ const RenderScene = (ps: { [id: string] : Point }, ls: { [id: string] : Line }, 
         pointDisplays.push(p)
         pointExpressions.push(pX, pY);
     }
-    pointExpressions = pointExpressions.concat(pointDisplays);
+    pointExpressions = pointExpressions.concat(pointDisplays); 
 
     //also need to check if some points are 'over-constrained'
     //e.g. a point has 2 variables of freedom (x and y), so if there are more than 2 constraints acting on it then it is 'over-constrained'
