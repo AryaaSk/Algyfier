@@ -72,3 +72,20 @@ const Shape = (type: "circle" | "rectangle", pointIDs: string[], lineIDs: string
 //Circle [center and radius] C+R: pointIDs: [C], data: [r]
 //Circle [center and point] C+P: pointIDs: [C, p1]
 //Circle [center and tangent] C+T (haven't got formula yet)
+
+
+
+
+
+interface Helper {
+    //intersections, areas, calculate gradient between 2 points
+    type: 'I:L+L' | 'I:C+L' | 'A:L' | 'A:C' | 'M';
+    data: (string | number)[];
+}
+
+//Helper definitions
+// I:L+L = Intersection between 2 lines, data: [l1ID, l2ID]
+// I:I+C = Intersection between circle and line, data: [CID, lID, sign?: 1 | -1]
+// A:L = Integral under line, data: [lID, lim1, lim2]
+// A:C = Integral under circle, data: [CID, lim1, lim2, sign?: 1 | -1]
+// M = Gradient between 2 points: data, [p1ID, p2ID]

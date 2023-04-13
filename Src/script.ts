@@ -14,13 +14,98 @@ const InitCalculator = (element: HTMLElement, options: { [k : string] : boolean 
     return calculator;
 }
 
-const UpdateCalculator = (externalVariables: Desmos.ExpressionState[], expressions: Desmos.ExpressionState[], helperExpressions: Desmos.ExpressionState[]) => {
+const UpdateCalculator = () => {
+    const [externalVariables, expressions] = RenderScene(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
+    const helperExpressions = HelperExpressions();
+    UpdateCalculatorState(externalVariables, expressions, helperExpressions);
+}
+
+const UpdateCalculatorState = (externalVariables: Desmos.ExpressionState[], expressions: Desmos.ExpressionState[], helperExpressions: Desmos.ExpressionState[]) => {
     const expression_states = CALCULATOR.getExpressions();
     CALCULATOR.removeExpressions(expression_states); //clear old expressions
     CALCULATOR.setExpressions(externalVariables);
     CALCULATOR.setExpressions(helperExpressions);
     CALCULATOR.setExpressions(expressions);
 }
+
+const UpdateDataFromCalculator = () => {
+    const data = CALCULATOR.getExpressions();
+    for (const expression of data) {
+        const id = expression.id!;
+
+        const point = POINTS[id];
+        if (point != undefined) {
+            //we know the id from desmos is definetly a point, get x and y value of point from desmos
+            //however we only want to alter points' x/y value if it is independent, which will be clear by checking whether the x or y value of the point is a number or string
+            if (! isNaN(<any>(point.x))) {
+                const desmosX = Number((<any>CALCULATOR.expressionAnalysis[id + "_{x}"]).evaluation.value);
+                point.x = desmosX;
+            }
+            if (! isNaN(<any>(point.y))) {
+                const desmosY = Number((<any>CALCULATOR.expressionAnalysis[id + "_{y}"]).evaluation.value);
+                point.y = desmosY
+            }
+        }
+        else if (id[0] == "M") { //gradient
+            const pointIDUpper = id.split("{")[1].split("}").join("");
+            const lineID = pointIDUpper + "_"
+            const newGradient = Number((<any>CALCULATOR.expressionAnalysis[id]).evaluation.value);
+
+            const line = LINES[lineID];
+            line.gradient = newGradient;
+        }
+        else if (id[0] == "S") { //point constraint
+            const [independantID, depdendentID] = id.split("{")[1].split("}").join("").toLowerCase().split("");
+            const newValue = Number((<any>CALCULATOR.expressionAnalysis[id]).evaluation.value);
+
+            //currently we don't know if this is a point constraint simply between 2 points or a shape
+            //check if this is a point constraint, if not then it must be a shape
+            let wasPointConstraint = false;
+            for (const pointConstraint of POINT_CONSTRAINTS) {
+                if (pointConstraint.point1ID == depdendentID && pointConstraint.point2ID == independantID) {
+                    pointConstraint.distance = newValue;
+                    wasPointConstraint = true;
+                }
+            }
+
+            //find the corresponding shape if it wasn't a point constraint
+            if (wasPointConstraint == false) {
+                for (const id in SHAPES) {
+                    const shape = SHAPES[id];
+                    if (shape.type == "rectangle") {
+                        const shapeIndependentPoint = shape.pointIDs[0];
+
+                        //could be the height or width, pointIds[1] will be width, pointIds[3] will be height
+                        const shapeWidthPoint = shape.pointIDs[1];
+                        const shapeHeightPoint = shape.pointIDs[3];
+
+                        //data[0] = height, data[1] = width 
+                        if (independantID == shapeIndependentPoint && depdendentID == shapeWidthPoint) {
+                            shape.data[1] = newValue;
+                        }
+                        else if (independantID == shapeIndependentPoint && depdendentID == shapeHeightPoint) {
+                            shape.data[0] = newValue;   
+                        }
+                    }
+                }
+            }
+        }
+        else if (id[0] == "C" && id.endsWith("r}")) {
+            const newValue = Number((<any>CALCULATOR.expressionAnalysis[id]).evaluation.value);
+            const circleID = id.split("{")[1].split("r}").join("");
+            const circle = SHAPES[circleID];
+
+            //circle's radius, now check if it's constructed with center + radius
+            if (circle.construction! == "C+R") {
+                circle.data[0] = newValue;
+            }
+        }
+    }
+}
+
+
+
+
 
 const Main = () => {
     const options = {
@@ -106,6 +191,9 @@ const Main = () => {
     POINTS["a"] = Point("", "");
     POINT_CONSTRAINTS.push(PointConstraint("a", "h", "h", 5));
     */
+
+    AttachListeners();
+    UpdateUI();
 }
 Main();
 

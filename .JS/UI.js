@@ -116,100 +116,18 @@ const PopulateDivs = (points, lines, shapes, pointConstraints, lineConstraints) 
     LINE_CONSTRAINTS_DIV.append(buttonElements[3]);
     SHAPES_DIV.append(buttonElements[4]);
 };
-const UpdateDataFromCalculator = () => {
-    const data = CALCULATOR.getExpressions();
-    for (const expression of data) {
-        const id = expression.id;
-        const point = POINTS[id];
-        if (point != undefined) {
-            //we know the id from desmos is definetly a point, get x and y value of point from desmos
-            //however we only want to alter points' x/y value if it is independent, which will be clear by checking whether the x or y value of the point is a number or string
-            if (!isNaN((point.x))) {
-                const desmosX = Number(CALCULATOR.expressionAnalysis[id + "_{x}"].evaluation.value);
-                point.x = desmosX;
-            }
-            if (!isNaN((point.y))) {
-                const desmosY = Number(CALCULATOR.expressionAnalysis[id + "_{y}"].evaluation.value);
-                point.y = desmosY;
-            }
-        }
-        else if (id[0] == "M") { //gradient
-            const pointIDUpper = id.split("{")[1].split("}").join("");
-            const lineID = pointIDUpper + "_";
-            const newGradient = Number(CALCULATOR.expressionAnalysis[id].evaluation.value);
-            const line = LINES[lineID];
-            line.gradient = newGradient;
-        }
-        else if (id[0] == "S") { //point constraint
-            const [independantID, depdendentID] = id.split("{")[1].split("}").join("").toLowerCase().split("");
-            const newValue = Number(CALCULATOR.expressionAnalysis[id].evaluation.value);
-            //currently we don't know if this is a point constraint simply between 2 points or a shape
-            //check if this is a point constraint, if not then it must be a shape
-            let wasPointConstraint = false;
-            for (const pointConstraint of POINT_CONSTRAINTS) {
-                if (pointConstraint.point1ID == depdendentID && pointConstraint.point2ID == independantID) {
-                    pointConstraint.distance = newValue;
-                    wasPointConstraint = true;
-                }
-            }
-            //find the corresponding shape if it wasn't a point constraint
-            if (wasPointConstraint == false) {
-                for (const id in SHAPES) {
-                    const shape = SHAPES[id];
-                    if (shape.type == "rectangle") {
-                        const shapeIndependentPoint = shape.pointIDs[0];
-                        //could be the height or width, pointIds[1] will be width, pointIds[3] will be height
-                        const shapeWidthPoint = shape.pointIDs[1];
-                        const shapeHeightPoint = shape.pointIDs[3];
-                        //data[0] = height, data[1] = width 
-                        if (independantID == shapeIndependentPoint && depdendentID == shapeWidthPoint) {
-                            shape.data[1] = newValue;
-                        }
-                        else if (independantID == shapeIndependentPoint && depdendentID == shapeHeightPoint) {
-                            shape.data[0] = newValue;
-                        }
-                    }
-                }
-            }
-        }
-        else if (id[0] == "C" && id.endsWith("r}")) {
-            const newValue = Number(CALCULATOR.expressionAnalysis[id].evaluation.value);
-            const circleID = id.split("{")[1].split("r}").join("");
-            const circle = SHAPES[circleID];
-            //circle's radius, now check if it's constructed with center + radius
-            if (circle.construction == "C+R") {
-                circle.data[0] = newValue;
-            }
-        }
-    }
-};
 const AttachListeners = () => {
     const bind = document.getElementById("bind");
     bind.onclick = () => {
         UpdateDataFromCalculator();
         PopulateDivs(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
     };
-    document.body.onkeydown = ($e) => {
-        const key = $e.key;
-        if (key == " ") {
-            Match("c_{x}", "HELPER-P_{MADMBD}", -1, -1);
-        }
-    };
     const construct = document.getElementById("construct");
     construct.onclick = () => {
-        const [externalVariables, expressions] = RenderScene(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
-        const helperExpressions = HelperExpressions();
-        UpdateCalculator(externalVariables, expressions, helperExpressions);
+        UpdateCalculator();
     };
 };
 const UpdateUI = () => {
     PopulateDivs(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
-    const [externalVariables, expressions] = RenderScene(POINTS, LINES, SHAPES, POINT_CONSTRAINTS, LINE_CONSTRAINTS);
-    const helperExpressions = HelperExpressions();
-    UpdateCalculator(externalVariables, expressions, helperExpressions);
+    UpdateCalculator();
 };
-const MainUI = () => {
-    AttachListeners();
-    UpdateUI();
-};
-MainUI();
