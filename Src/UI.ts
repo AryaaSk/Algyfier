@@ -149,6 +149,19 @@ const AttachListeners = () => {
     construct.onclick = () => {
         UpdateCalculator();
     }
+
+    const setupNav = document.getElementById("setup")!;
+    const helpersNav = document.getElementById("setup")!;
+    const setupContainer = document.getElementById("setupConstraintsWrapper")!;
+    const helperContainer = document.getElementById("helperConstraintsWrapper")!;
+    setupNav.onclick = () => {
+        setupContainer.style.display = "";
+        helperContainer.style.display = "none";
+    }
+    helpersNav.onclick = () => {
+        setupContainer.style.display = "none";
+        helperContainer.style.display = "";
+    }
 }
 
 

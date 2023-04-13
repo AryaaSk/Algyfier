@@ -17,48 +17,59 @@
 </head>
 <body>
     <div id="main">
-        <div id="constraintsWrapper">
-            <div id="buttonWrapper" style="grid-column: 1 / 3;">
-                <button id="bind"> Bind </button>
-                <button id="construct"> Construct </button>
-            </div>
-
-            <div class="dataContainer">
-                <div id="points" class="collectionView">
-                    <div class="cell"> A </div>
-                    <button class="cell add" id="addPoint" > + </button>
+        <div id="menuContainer">
+            <div id="setupConstraintsWrapper">
+                <div id="buttonWrapper" style="grid-column: 1 / 3;">
+                    <button id="bind" class="actionButton"> Bind </button>
+                    <button id="construct" class="actionButton"> Construct </button>
                 </div>
-            </div>
-
-            <div class="dataContainer">
-                <div id="pointContstraints" class="collectionView list">
-                    <div class="row">
-                        (a) is horizontal to (b) with distance 5
+    
+                <div class="dataContainer">
+                    <div id="points" class="collectionView">
+                        <div class="cell"> A </div>
+                        <button class="cell add" id="addPoint" > + </button>
                     </div>
-                    <button class="cell add" id="addPointConstraint" > + </button>
                 </div>
-            </div>
-
-            <div class="dataContainer">
-                <div id="lines" class="collectionView">
-                    <button class="cell add" id="addLine" > + </button>
-                </div>
-            </div>
-
-            <div class="dataContainer">
-                <div id="lineConstraints" class="collectionView list">
-                    <button class="cell add" id="addLineConstraint" > + </button>
-                </div>
-            </div>
-
-            <div class="dataContainer" style="grid-column: 1 / 3;">
-                <div id="shapes" class="collectionView list">
-                    <div class="shapeRow">
-                        <div>A</div>
-                        <div>Center: a, Radius: 5</div>
+    
+                <div class="dataContainer">
+                    <div id="pointContstraints" class="collectionView list">
+                        <div class="row">
+                            (a) is horizontal to (b) with distance 5
+                        </div>
+                        <button class="cell add" id="addPointConstraint" > + </button>
                     </div>
-                    <button class="cell add" id="addShape" > + </button>
                 </div>
+    
+                <div class="dataContainer">
+                    <div id="lines" class="collectionView">
+                        <button class="cell add" id="addLine" > + </button>
+                    </div>
+                </div>
+    
+                <div class="dataContainer">
+                    <div id="lineConstraints" class="collectionView list">
+                        <button class="cell add" id="addLineConstraint" > + </button>
+                    </div>
+                </div>
+    
+                <div class="dataContainer" style="grid-column: 1 / 3;">
+                    <div id="shapes" class="collectionView list">
+                        <div class="shapeRow">
+                            <div>A</div>
+                            <div>Center: a, Radius: 5</div>
+                        </div>
+                        <button class="cell add" id="addShape" > + </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="helperConstraintsWrapper" style="display: none;">
+                This is where the helpers will go
+            </div>
+
+            <div id="tabBar">
+                <button id="setup">Setup</button>
+                <button id="helpers">Helpers</button>
             </div>
         </div>
 

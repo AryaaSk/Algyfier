@@ -153,6 +153,7 @@ const Main = () => {
     POINT_CONSTRAINTS.push(PointConstraint("d", "c", "v", 2));
     LINES["AD"] = Line("a", "d");
     LINES["BD"] = Line("b", "d");
+    LINES["B_"] = Line("b", "", 2);
     //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
     /*
     //Testing point constraint and rectangle binding

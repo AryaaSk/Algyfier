@@ -178,6 +178,8 @@ const Main = () => {
     LINES["AD"] = Line("a", "d");
     LINES["BD"] = Line("b", "d");
 
+    LINES["B_"] = Line("b", "", 2);
+
     //Ideal values of C_x: -1.2360679776 (gradient close to -1) or 3.2360679775 (gradient = -1)
 
     /*

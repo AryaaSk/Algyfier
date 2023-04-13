@@ -33,14 +33,47 @@ div {
     grid-template-rows: 100%;
 }
 
+#menuContainer {
+    height: 100%;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: 1fr 50px;
+}
+
+#tabBar {
+    height: calc(100% - 1px);
+    width: 100%;
+
+    background-color: white;
+    border-top: 1px solid black;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 100%;
+}
+#tabBar > button {
+    border: none;
+    background-color: white;
+
+    font-size: large;
+}
+#tabBar > button:active {
+    background-color: rgb(210, 210, 210);
+}
+#setup {
+    border-right: 1px solid grey !important;
+}
+
 #calculatorWrapper {
     height: 100%;
     width: calc(100% - 2px); /* To account for the border */
 
-    border-left: 2px solid black;
+    border-left: 1px solid black;
 }
 
-#constraintsWrapper {
+#setupConstraintsWrapper {
     height: 100%;
     width: 100%;
 
@@ -57,7 +90,7 @@ div {
     background-color: rgb(235, 235, 235);
 }
 
-#constraintsWrapper > .dataContainer { /* Individual sections e.g. points, lines */
+#setupConstraintsWrapper > .dataContainer { /* Individual sections e.g. points, lines */
     height: 100%;
     width: 100%;
 
@@ -83,34 +116,29 @@ div {
     grid-template-rows: 100%;
     gap: 15px;
 }
-#construct {
+.actionButton {
     height: 100%;
     width: 100%;
-    
-    border: 0;
-    background-color: rgb(15, 100, 210);
-    border-radius: 8px;
-    transition: background-color 50ms;
 
-    color: white;
+    border: 0;
+    background-color: whitesmoke;
+    transition: background-color 50ms;
+    border-radius: 8px;
+
+    color: black;
     font-size: x-large;
     font-weight: 400;
+}
+#construct {
+    background-color: rgb(15, 100, 210);
+    color: white;
 }
 #construct:active {
     background-color: rgb(10, 80, 170);
 }
 #bind {
-    height: 100%;
-    width: 100%;
-
-    border: 0;
     background-color: rgb(40, 40, 40);
-    transition: background-color 50ms;
-    border-radius: 8px;
-
     color: white;
-    font-size: x-large;
-    font-weight: 400;
 }
 #bind:active {
     background-color: rgb(70, 70, 70);
@@ -216,4 +244,15 @@ div {
 }
 #addShape {
     font-size: 50px;
+}
+
+
+
+
+
+#helperConstraintsWrapper {
+    height: 100%;
+    width: 100%;
+
+    background-color: red;
 }
